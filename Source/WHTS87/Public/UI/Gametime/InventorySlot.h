@@ -10,6 +10,8 @@ class APickupItemContainer;
 class UTextBlock;
 class UImage;
 class USizeBox;
+class UInventoryPanel;
+class UInventoryComponent;
 
 /**
  *
@@ -20,21 +22,23 @@ class WHTS87_API UInventorySlot : public UUserWidget
 	GENERATED_BODY()
 public:
 	virtual void NativeOnInitialized() override;
-	//void SetItemContainer(APickupItemContainer* NewItemContainer, float tileSize, UInventoryPanel* newOwningPanel);
+	void SetItemContainer(APickupItemContainer* NewItemContainer, float tileSize);
 	void UpdateSlot();
 	virtual void RemoveFromParent() override;
 	APickupItemContainer* GetItemContainer() const { return representedContainer.IsValid() ? representedContainer.Get() : nullptr; };
+	//UInventoryPanel* GetParentPanel () const;
 	//UInventoryPanel* GetInventoryPanel() const { return owningPanel; };
 	//UPROPERTY(EditAnywhere, Category = "Config")
 		//TSubclassOf<UItemInfoPanel> infopanelClass;
 	//void ToggleInfopanelVisibility(bool bVisible);
 protected:
 	TWeakObjectPtr<APickupItemContainer> representedContainer;
+	//remove?
+	TWeakObjectPtr<APickupItemContainer> representedInventory;
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 		UImage* thumbnail;
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 		UTextBlock* itemCount;
-	//UInventoryPanel* owningPanel;
 	//UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 		//USizeBox* mainSizeBox;
 	
@@ -50,7 +54,4 @@ protected:
 	void UseItem();
 	//void ShowInfoPanel();
 	//bool UpdateItemInfopanel();
-
-	//virtual FReply NativeOnFocusReceived(const FGeometry& InGeometry, const FFocusEvent& InFocusEvent) override;
-	//virtual void NativeOnFocusLost(const FFocusEvent& InFocusEvent) override;	
 };

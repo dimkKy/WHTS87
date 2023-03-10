@@ -24,6 +24,10 @@ public:
 	void OnPawnUnPossess();
 	void OnViewTargetChange(AActor* NewViewTarget, FViewTargetTransitionParams TransitionParams);
 	void ToggleInventoryMenu();
+
+#if WITH_EDITOR
+	virtual EDataValidationResult IsDataValid(TArray<FText>& ValidationErrors) override;
+#endif
 	
 protected:
 	virtual void BeginPlay() override;
@@ -42,8 +46,4 @@ protected:
 	/// <param name="bNewInteractionModeGame"> set false to change to UI mode</param>
 	/// <param name="bShowMouseInUIMode">whether or not to let player interact via point-n-clicking. UI mode only</param>
 	void SetPlayerInteractionMode(bool bInteractionModeGame, bool bShowMouseInUIMode = true);
-
-#if WITH_EDITOR
-	virtual EDataValidationResult IsDataValid(TArray<FText>& ValidationErrors) override;
-#endif
 };

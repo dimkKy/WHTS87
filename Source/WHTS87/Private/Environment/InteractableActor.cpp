@@ -12,7 +12,7 @@ AInteractableActor::AInteractableActor() /*: longInteractionTime{0.f}*/
 
 UE_NODISCARD bool AInteractableActor::OnInteract(AActor* caller, bool bIsInstantAction)
 {
-	if (IsCurrentlyInteractable() && IsValid(caller)) {
+	if (IsValid(caller) && IsCurrentlyInteractable(caller)) {
 		if (bIsInstantAction) {
 			return OnInstantInteraction(caller);
 		}

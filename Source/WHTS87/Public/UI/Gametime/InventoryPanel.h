@@ -6,10 +6,11 @@
 #include "Blueprint/UserWidget.h"
 #include "InventoryPanel.generated.h"
 
-//class UInventoryComponent;
+class UInventoryComponent;
 class UScrollBox;
 class UCanvasPanel;
 class UInventorySlot;
+class UInventoryMenu;
 /**
  * 
  */
@@ -22,9 +23,10 @@ public:
 
 	//virtual void SetInventory(UInventoryComponent* NewInventory);
 	void UpdateAllSlots();
-	float GetTileSize();
+	UInventoryMenu* GetParentMenu() const;
+	void SetNewInventory(UInventoryComponent* newInventory);
 protected:
-	//TWeakObjectPtr<UInventoryComponent> inventory;
+	TWeakObjectPtr<UInventoryComponent> representedInventory;
 	UPROPERTY(EditDefaultsOnly)
 		TSubclassOf<UInventorySlot> slotClass;
 	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;

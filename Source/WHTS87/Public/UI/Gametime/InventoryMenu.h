@@ -7,6 +7,7 @@
 #include "InventoryMenu.generated.h"
 
 class UInventoryPanel;
+class UInventoryDiscardPanel;
 class UCanvasPanel;
 class UCanvasPanelSlot;
 class UInventoryItemInfoPanel;
@@ -27,6 +28,12 @@ public:
 	//void ToggleHoverItemInfopanel(UPickupItemInfoBase* itemInfo, bool bEnable, float desiredGLobalPositionY);
 	//several panels possible
 	void ToggleHoverItemInfopanel(UPickupItemInfoBase* itemInfo, bool bEnable, FVector2D desiredGlobalPosition);
+	//todo
+	float GetSlotTileSize();
+
+#if WITH_EDITOR
+	virtual EDataValidationResult IsDataValid(TArray<FText>& ValidationErrors) override;
+#endif
 protected:
 	virtual void NativeOnInitialized() override;
 	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
@@ -42,6 +49,8 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 		UInventoryPanel* playerInventoryPanel;
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UInventoryDiscardPanel* discardPanel;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 		UWidgetSwitcher* secondaryPanelSwitcher;
@@ -51,7 +60,4 @@ protected:
 		UInventoryPanel* secondaryInventoryPanel;
 	UPROPERTY(EditDefaultsOnly)
 		TSubclassOf<UInventoryItemInfoPanel> itemInfoPanelClass;
-#if WITH_EDITOR
-	virtual EDataValidationResult IsDataValid(TArray<FText>& ValidationErrors) override;
-#endif
 };

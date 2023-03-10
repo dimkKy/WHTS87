@@ -6,11 +6,11 @@
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
 
 APhysicsDoor::APhysicsDoor() : doorFrame{ CreateDefaultSubobject<UStaticMeshComponent>("doorFrame") },
-door{ CreateDefaultSubobject<UStaticMeshComponent>("door") },
-physicsConstraint{ CreateDefaultSubobject<UPhysicsConstraintComponent>("constraint") },
-lockState { EDoorlockState::ClosedLock }, bUnknownState{ true }, bIsClosed{ true }, bIsPendingClose{ false },
-maxOpenHalfAngle{ 46.f }, physicsConstraintStrength{ 5.f }, physicsConstraintDamping{ 10.f }, doorPushingImpulse{ 15.f },
-openConstraitPosition{ 0.f, maxOpenHalfAngle * 2.f, 0.f }, closeConstraitPosition{ 0.f, maxOpenHalfAngle * -2.f, 0.f }
+	door{ CreateDefaultSubobject<UStaticMeshComponent>("door") },
+	physicsConstraint{ CreateDefaultSubobject<UPhysicsConstraintComponent>("constraint") },
+	lockState { EDoorlockState::ClosedLock }, bUnknownState{ true }, bIsClosed{ true }, bIsPendingClose{ false },
+	maxOpenHalfAngle{ 46.f }, physicsConstraintStrength{ 5.f }, physicsConstraintDamping{ 10.f }, doorPushingImpulse{ 15.f },
+	openConstraitPosition{ 0.f, maxOpenHalfAngle * 2.f, 0.f }, closeConstraitPosition{ 0.f, maxOpenHalfAngle * -2.f, 0.f }
 {
 	SetActorTickInterval(1.f);
 
@@ -23,7 +23,7 @@ openConstraitPosition{ 0.f, maxOpenHalfAngle * 2.f, 0.f }, closeConstraitPositio
 	door->BodyInstance.bEnableGravity = false;
 	door->BodyInstance.bGenerateWakeEvents = true;
 	door->BodyInstance.StabilizationThresholdMultiplier = 0.2f;
-	door->OnComponentSleep.AddDynamic(this, &APhysicsDoor::OnDoorPutToSleep);
+	
 	door->SetAngularDamping(physicsConstraintDamping);
 	door->SetGenerateOverlapEvents(false);
 
@@ -72,6 +72,7 @@ bool APhysicsDoor::SetMeshes(UStaticMesh* newDoorFrameMesh, UStaticMesh* newDoor
 
 void APhysicsDoor::BeginPlay()
 {
+	door->OnComponentSleep.AddDynamic(this, &APhysicsDoor::OnDoorPutToSleep);
 	physicsConstraint->SetAngularOrientationTarget(closeConstraitPosition);
 	door->SetSimulatePhysics(false);
 	door->SetWorldRotation(doorFrame->GetComponentRotation());

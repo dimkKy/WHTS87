@@ -35,16 +35,16 @@ void UGametimeUI::SetCurrentMenu(EGametimeMenu newMenu)
 {
 	switch (newMenu)
 	{
-	case EGametimeMenu::Walktime:
-		SetCurrentMenu(walktimeCanvas);
-		break;
 	case EGametimeMenu::Inventory:
 		SetCurrentMenu(inventoryMenu);
 		break;
 	case EGametimeMenu::Journal:
 		SetCurrentMenu(journalMenu);
 		break;
+	case EGametimeMenu::Walktime:
+		[[fallthrough]];
 	default:
+		SetCurrentMenu(walktimeCanvas);
 		break;
 	}
 }

@@ -13,8 +13,8 @@ class WHTS87_API AInteractableActor : public AActor
 public:	
 	AInteractableActor();
 
-	UE_NODISCARD virtual bool OnInteract(AActor* Caller, bool bIsInstantAction = true) final;
-	virtual bool IsCurrentlyInteractable() const { return true; };
+	UE_NODISCARD virtual bool OnInteract(AActor* caller, bool bIsInstantAction = true) final;
+	virtual bool IsCurrentlyInteractable(AActor* caller) const { return true; };
 	//virtual float GetLongInteractionTime() const { return longInteractionTime; };
 	virtual float GetLongInteractionTime() const { return 0.f; };
 

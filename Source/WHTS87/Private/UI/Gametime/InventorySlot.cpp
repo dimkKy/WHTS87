@@ -3,8 +3,10 @@
 
 #include "UI/Gametime/InventorySlot.h"
 //#include "Components/CanvasPanelSlot.h"
-#include "Components/CanvasPanel.h"
 #include "Environment/PickupItemContainer.h"
+//#include "UI/Gametime/InventoryMenu.h"
+#include "Components/CanvasPanel.h"
+
 #include "Components/TextBlock.h"
 #include "Components/Image.h"
 #include "Framework/MultiBox/MultiBoxBuilder.h"
@@ -15,6 +17,10 @@
 void UInventorySlot::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
+}
+
+void UInventorySlot::SetItemContainer(APickupItemContainer* NewItemContainer, float tileSize)
+{
 }
 
 void UInventorySlot::UpdateSlot()
@@ -39,6 +45,13 @@ void UInventorySlot::RemoveFromParent()
 {
 	Super::RemoveFromParent();
 }
+/*
+UInventoryPanel* UInventorySlot::GetParentPanel() const
+{
+	if (UInventoryPanel* parentPanel{ Cast<UInventoryPanel>(Slot->Parent) })
+		return parentPanel;
+	return nullptr;
+}*/
 
 FReply UInventorySlot::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
@@ -54,11 +67,11 @@ FReply UInventorySlot::NativeOnMouseButtonUp(const FGeometry& InGeometry, const 
 	if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton) {
 		//check command list, move to item info?
 		FMenuBuilder menuBuilder{ true, nullptr };
-
+		
 		menuBuilder.BeginSection("Actions");
 		{
-			
-			/*menuBuilder.AddMenuEntry(LOCTEXT("RemoveFromInventory", "Выбросить"), FText(),
+			/*
+			menuBuilder.AddMenuEntry(LOCTEXT("RemoveFromInventory", "Выбросить"), FText(),
 				FSlateIcon(/*FEditorStyle::GetStyleSetName(), "ContentBrowser.AssetActions.Delete"*),
 				FUIAction(FExecuteAction::CreateUObject(this, &ThisClass::RemoveFromInventory)));
 			menuBuilder.AddMenuEntry(LOCTEXT("ShowItemDescription", "Показать описание"), FText(),

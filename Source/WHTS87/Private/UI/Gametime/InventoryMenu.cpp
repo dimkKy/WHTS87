@@ -62,6 +62,11 @@ void UInventoryMenu::ToggleHoverItemInfopanel(UPickupItemInfoBase* itemInfo, boo
 	return;
 }
 
+float UInventoryMenu::GetSlotTileSize()
+{
+	return 0.0f;
+}
+
 void UInventoryMenu::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
@@ -78,6 +83,7 @@ bool UInventoryMenu::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEv
 #if WITH_EDITOR
 EDataValidationResult UInventoryMenu::IsDataValid(TArray<FText>& ValidationErrors)
 {
+	//?
 	EDataValidationResult superResult{ Super::IsDataValid(ValidationErrors) };
 	if (superResult == EDataValidationResult::Valid) {
 		if (!IsValid(itemInfoPanelClass))

@@ -32,16 +32,17 @@ void UMainMenuUI::SetCurrentSubmenu(EMainMenuPage newSubmenu)
 			submenuSwitcher->SetVisibility(ESlateVisibility::Hidden);
 			currentSubmenu = newSubmenu;
 			return;*/
-	case EMainMenuPage::NewGame:
-		SetCurrentSubmenu(newGameSubmenu);
-		break;
-	case EMainMenuPage::LoadGame:
-		SetCurrentSubmenu(loadGameSubmenu);
-		break;
+	
 	case EMainMenuPage::Settings:
 		SetCurrentSubmenu(settingsSubmenu);
 		break;
+	case EMainMenuPage::NewGame:
+		SetCurrentSubmenu(newGameSubmenu);
+		break;
+	case EMainMenuPage::LoadGame:	
+		[[fallthrough]];
 	default:
+		SetCurrentSubmenu(loadGameSubmenu);
 		break;
 	}
 }
