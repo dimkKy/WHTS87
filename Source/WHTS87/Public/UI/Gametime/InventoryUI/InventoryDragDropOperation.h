@@ -6,8 +6,9 @@
 #include "Blueprint/DragDropOperation.h"
 #include "InventoryDragDropOperation.generated.h"
 
-class UCanvasPanelSlot;
-class UCanvasPanel;
+//class UCanvasPanelSlot;
+//class UCanvasPanel;
+class UPanelWidget;
 /**
  * 
  */
@@ -16,12 +17,14 @@ class WHTS87_API UInventoryDragDropOperation : public UDragDropOperation
 {
 	GENERATED_BODY()
 public:
+	UInventoryDragDropOperation();
 	//UE_NODISCARD bool SaveWidgetPosition(UCanvasPanelSlot* canvasPanelSlot);
 	//UE_NODISCARD bool SaveWidgetPosition(FVector2D& slotPosition, UCanvasPanel* canvasPanel);
 	//UCanvasPanel* GetWidgetInitialPosition(FVector2D& outLocalPosition);
 	FVector2D localDragPivotPosition;
 	FVector2D initialPosition;
-	UCanvasPanel* initialCanvasPanel;
+	UPanelWidget* initialCanvasPanel;
+	//UCanvasPanel* initialCanvasPanel;
 protected:
 	
 };

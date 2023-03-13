@@ -9,6 +9,20 @@
 
 class UGametimeUI;
 class UMainMenuUI;
+class UInteractionHelper;
+
+enum class EUIType : uint8
+{
+	/*Playing in a world, view target is player character */
+	Player,
+	/*We are inside main menu*/
+	MainMenu,
+	/*Hide UI with possibility to skip*/
+	Cinematic,
+	/*Hide all UI*/
+	NoUI,
+};
+
 /**
  * 
  */
@@ -22,13 +36,14 @@ public:
 
 	void OnPawnPossession();
 	void OnPawnUnPossess();
-	void OnViewTargetChange(AActor* NewViewTarget, FViewTargetTransitionParams TransitionParams);
+	void SetUIType(EUIType newUIType, FViewTargetTransitionParams TransitionParams);
+	UInteractionHelper* GetInteractionHelper();
+
 	void ToggleInventoryMenu();
 
 #if WITH_EDITOR
 	virtual EDataValidationResult IsDataValid(TArray<FText>& ValidationErrors) override;
 #endif
-	
 protected:
 	virtual void BeginPlay() override;
 	UPROPERTY(EditDefaultsOnly)
@@ -39,11 +54,4 @@ protected:
 		TSubclassOf<UGametimeUI> mainMenuUIClass;
 	UPROPERTY()
 		UMainMenuUI* mainMenuUI;
-
-	/// <summary>
-	/// SetInputMode replacement. Limited to UI- or Game- only
-	/// </summary>
-	/// <param name="bNewInteractionModeGame"> set false to change to UI mode</param>
-	/// <param name="bShowMouseInUIMode">whether or not to let player interact via point-n-clicking. UI mode only</param>
-	void SetPlayerInteractionMode(bool bInteractionModeGame, bool bShowMouseInUIMode = true);
 };

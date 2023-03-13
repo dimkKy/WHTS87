@@ -4,6 +4,7 @@
 #include "Player/WHTS87PlayerController.h"
 #include "UI/HUDManager.h"
 #include "Player/PlayerCharacter.h"
+#include "UI/Gametime/InteractionHelper.h"
 
 void AWHTS87PlayerController::OnToggleInventoryMenu()
 {
@@ -28,9 +29,27 @@ void AWHTS87PlayerController::SetViewTarget(AActor* NewViewTarget, FViewTargetTr
 {
 	Super::SetViewTarget(NewViewTarget, TransitionParams);
 	//if (GetViewTarget()->GetClass()->IsChildOf(APlayerCharacter::StaticClass()))
-	if (AHUDManager* HUD{ Cast<AHUDManager>(MyHUD) }) {
-		HUD->OnViewTargetChange(NewViewTarget, TransitionParams);
+	UClass* viewTargetClass{ NewViewTarget->GetClass() };
+	if (AHUDManager * HUD{ Cast<AHUDManager>(MyHUD) }) {
+		if (viewTargetClass->IsChildOf(APlayerCharacter::StaticClass())) {
+			HUD->SetUIType(EUIType::Player, TransitionParams);
+			return;
+		}
+		
 	}
+	else
+		return;
+}
+
+UInteractionHelper* AWHTS87PlayerController::GetInteractionHelper()
+{
+	AActor* viewTarget{ GetViewTarget() };
+	if (GEngine->GameViewport != nullptr && viewTarget != nullptr && viewTarget->GetClass()->IsChildOf(APlayerCharacter::StaticClass())) {
+		if (AHUDManager * HUD{ Cast<AHUDManager>(MyHUD) }) {
+			return HUD->GetInteractionHelper();
+		}
+	}
+	return nullptr;
 }
 
 void AWHTS87PlayerController::BeginPlay()
@@ -53,4 +72,29 @@ void AWHTS87PlayerController::OnUnPossess()
 		HUD->OnPawnUnPossess();
 	}
 	Super::OnUnPossess();
+}
+
+void AWHTS87PlayerController::SetPlayerInteractionMode(bool bInteractionModeGame, bool bShowMouseInUIMode)
+{
+	if (bInteractionModeGame) {
+		SetInputMode(FInputModeGameOnly::FInputModeGameOnly());
+		bShowMouseCursor = false;
+		//some checks
+		SetCinematicMode(false, false, false, true, true);
+	}
+	else {
+		FInputModeGameAndUI inputMode;
+		inputMode.SetHideCursorDuringCapture(false);
+		SetInputMode(inputMode);
+
+		bShowMouseCursor = bShowMouseInUIMode;
+		SetCinematicMode(true, false, false, true, true);
+		//TODO
+		if (bShowMouseInUIMode) {
+
+		}
+		else {
+
+		}
+	}
 }

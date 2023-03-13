@@ -3,7 +3,11 @@
 
 #include "Player/PlayerCharacter.h"
 #include "Player/PlayerInventoryComponent.h"
+#include "Player/PlayerVitalsComponent.h"
+#include "Player/WHTS87PlayerController.h"
 #include "Environment/InteractableActor.h"
+#include "UI/HUDManager.h"
+#include "UI/Gametime/InteractionHelper.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -12,6 +16,7 @@
 APlayerCharacter::APlayerCharacter() : firstPersonCamera{ CreateDefaultSubobject<UCameraComponent>("firstPersonCamera") },
 	cameraSpringArm{ CreateDefaultSubobject<USpringArmComponent>("cameraSpringArm") },
 	inventory{ CreateDefaultSubobject<UPlayerInventoryComponent>("inventory") },
+	vitals{ CreateDefaultSubobject<UPlayerVitalsComponent>("vitals") },
 	baseTurnRate{ 45.f }, baseLookUpRate{ 45.f }, maxInteractionDistance{ 450.f },
 	actorInFocus{ nullptr }, actorCurrentlyInteractingWith{ nullptr }
 {
@@ -111,30 +116,49 @@ USceneComponent* APlayerCharacter::GetEquipmentAttachParent()
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	AddTickPrerequisiteComponent(vitals);
 }
 
 // Called every frame
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	if (GetWorld()->LineTraceSingleByChannel(hitResult, firstPersonCamera->GetComponentLocation(),
-		(firstPersonCamera->GetForwardVector() * maxInteractionDistance) + firstPersonCamera->GetComponentLocation(),
-		ECC_Visibility, FCollisionQueryParams::DefaultQueryParam, FCollisionResponseParams::DefaultResponseParam)) {
-		if (AInteractableActor* interactableInFocus{ Cast<AInteractableActor>(hitResult.GetActor()) }) {
-			if (interactableInFocus == actorInFocus) {
-				//start showing prompt
+	//handle interaction
+	if (actorCurrentlyInteractingWith) {
+		//negative means button was just pressed
+		if (timeSinceLongInteractionStarted > 0.f) {
+			//long interaction is currently in proccess, checks are inside OnInteracting()
+			timeSinceLongInteractionStarted += DeltaTime;
+			if (actorCurrentlyInteractingWith->GetLongInteractionTime() < timeSinceLongInteractionStarted) {
+				//finish long interaction
+				if (actorCurrentlyInteractingWith->OnInteract(this, false)) {
+					//long interaction successfull
+				}
+				else {
+					//long interaction failed
+				}
+				StopInteracting();
 			}
-			else {
-				actorInFocus = interactableInFocus;
-			}
-
 		}
 	}
 	else {
-		actorInFocus = nullptr;
+		if (GetWorld()->LineTraceSingleByChannel(interactionShotResult, firstPersonCamera->GetComponentLocation(),
+			(firstPersonCamera->GetForwardVector() * maxInteractionDistance) + firstPersonCamera->GetComponentLocation(),
+			ECC_Visibility, FCollisionQueryParams::DefaultQueryParam, FCollisionResponseParams::DefaultResponseParam)) {
+			if (AInteractableActor * interactableInFocus{ Cast<AInteractableActor>(interactionShotResult.GetActor()) }) {
+				if (interactableInFocus == actorInFocus) {
+					//start showing prompt
+				}
+				else {
+					actorInFocus = interactableInFocus;
+				}
+			}
+		}
+		else {
+			actorInFocus = nullptr;
+		}
 	}
+	
 
 }
 
@@ -149,9 +173,9 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &APlayerCharacter::LookUpAtRate);
 
-	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &APlayerCharacter::StartInteract);
+	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &APlayerCharacter::StartInteraction);
 	PlayerInputComponent->BindAction("Interact", IE_Repeat, this, &APlayerCharacter::OnInteracting);
-	PlayerInputComponent->BindAction("Interact", IE_Released, this, &APlayerCharacter::FinishInteract);
+	PlayerInputComponent->BindAction("Interact", IE_Released, this, &APlayerCharacter::AbortInteraction);
 	//PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &APlayerCharacter::OnReload);
 	//PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &APlayerCharacter::ApplySelfDamage);
 }
@@ -180,16 +204,35 @@ void APlayerCharacter::LookUpAtRate(float rate)
 	AddControllerPitchInput(rate * baseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
-void APlayerCharacter::StartInteract()
+void APlayerCharacter::StartInteraction()
 {
-	if (GetWorld()->LineTraceSingleByChannel(hitResult, firstPersonCamera->GetComponentLocation(), 
+	if (GetWorld()->LineTraceSingleByChannel(interactionShotResult, firstPersonCamera->GetComponentLocation(), 
 			(firstPersonCamera->GetForwardVector() * maxInteractionDistance) + firstPersonCamera->GetComponentLocation(), 
 			ECC_Visibility, FCollisionQueryParams::DefaultQueryParam, FCollisionResponseParams::DefaultResponseParam)) {
-		if (AInteractableActor* interactableInFocus{ Cast<AInteractableActor>(hitResult.GetActor()) }) {
-			if (interactableInFocus->IsCurrentlyInteractable(this)) {
+		if (AInteractableActor* interactableInFocus{ Cast<AInteractableActor>(interactionShotResult.GetActor()) }) {
+			actorCurrentlyInteractingWith = interactableInFocus;
+			timeSinceLongInteractionStarted = -1.f;
+			SetActorTickInterval(0.f);
+			/*/ugly
+			APlayerController* playerController{ CastChecked<APlayerController>(Controller) };
+			AHUDManager* HUDManager{ Cast<AHUDManager>(playerController->MyHUD) };
+			AActor* viewTarger{ playerController->GetViewTarget() };
+			//should also work without ui
+			if (HUDManager != nullptr && IsValid(viewTarger) && viewTarger->GetClass()->IsChildOf(StaticClass())) {
 				
+				UInteractionHelper* helper{ HUDManager->GetInteractionHelper() };
+
 
 			}
+
+			UInteractionHelper* helper{ CastChecked<AWHTS87PlayerController>(Controller)->GetInteractionHelper() };
+			if (helper != nullptr && interactableInFocus->IsCurrentlyInteractable(this)) {
+				actorCurrentlyInteractingWith = interactableInFocus;
+				//helper
+				//CastChecked<AWHTS87PlayerController>(Controller)->MyHUD;
+				//CastChecked<AWHTS87PlayerController>(Controller)->SetInputMode
+
+			}*/
 		}
 	}
 }
@@ -198,13 +241,46 @@ void APlayerCharacter::OnInteracting()
 {
 	//track location
 	check(actorCurrentlyInteractingWith != nullptr);
-	if (FVector::DistSquared(firstPersonCamera->GetComponentLocation(), actorCurrentlyInteractingWith->GetActorLocation())
-		 > (maxInteractionDistance + 10.f) * maxInteractionDistance) {
+	if (actorCurrentlyInteractingWith->GetLongInteractionTime() == 0.f)
+		return;
+	if (actorCurrentlyInteractingWith->IsCurrentlyInteractable(this) && 
+		FVector::DistSquared(firstPersonCamera->GetComponentLocation(), actorCurrentlyInteractingWith->GetActorLocation())
+		< (maxInteractionDistance + 10.f) * maxInteractionDistance) {
+		//proceed
+		if (timeSinceLongInteractionStarted < 0.f) {
+			//actually start long interaction
+			timeSinceLongInteractionStarted = 0.25f;
+
+		}
+	}
+	else {
 		//break interaction
+		StopInteracting();
 	}
 }
 
-void APlayerCharacter::FinishInteract()
+void APlayerCharacter::AbortInteraction()
 {
-	//stop interation if short
+	//verify we can still interact
+	if (actorCurrentlyInteractingWith->IsCurrentlyInteractable(this) && 
+		FVector::DistSquared(firstPersonCamera->GetComponentLocation(), actorCurrentlyInteractingWith->GetActorLocation())
+		< (maxInteractionDistance + 10.f) * maxInteractionDistance) {
+		if (timeSinceLongInteractionStarted < 0.f) {
+			//instant interaction
+			timeSinceLongInteractionStarted = 0.25f;
+			if (actorCurrentlyInteractingWith->OnInteract(this)) {
+				//instant interaction successfull
+			}
+			else {
+				//instant interaction failed
+			}
+		}
+	}
+	StopInteracting();
+}
+
+void APlayerCharacter::StopInteracting()
+{
+	SetActorTickInterval(0.25f);
+	actorCurrentlyInteractingWith = nullptr;
 }

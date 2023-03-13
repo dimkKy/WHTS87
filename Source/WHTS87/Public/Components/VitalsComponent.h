@@ -29,15 +29,20 @@ public:
 	void ApplyPhysicalDamage(float amount, float duration);
 	float GetMaxHP() const { return maxHPBase; };
 	float GetCurrentHP() const { return currentHP; };
+
+#if WITH_EDITOR
+	virtual EDataValidationResult IsDataValid(TArray<FText>& ValidationErrors) override;
+#endif
 protected:
 	virtual void BeginPlay() override;
 	float ModifyQueue(TDoubleLinkedList<FPointsModifier>& queue, float deltaTime);
 	//replace wiyh delegate?
 	void OnHPEnded();
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ClampMin = "1"))
 		float maxHPBase;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ClampMin = "1"))
 		float HPRegenPerSecond;
 	float currentHP;
 	TDoubleLinkedList<FPointsModifier> healthModifiersQueue;
+
 };

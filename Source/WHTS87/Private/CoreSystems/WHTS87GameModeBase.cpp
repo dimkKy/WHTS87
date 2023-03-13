@@ -1,5 +1,5 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 
-#include "WHTS87GameModeBase.h"
+#include "CoreSystems/WHTS87GameModeBase.h"
 

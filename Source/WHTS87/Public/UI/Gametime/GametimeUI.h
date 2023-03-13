@@ -27,6 +27,7 @@ class UInventoryMenu;
 class UJournalMenu;
 class UCanvasPanel;
 class UWidgetSwitcher;
+class UInteractionHelper;
 
 /**
  * 
@@ -41,6 +42,7 @@ public:
 	void OnPawnPossession();
 	void OnPawnUnPossess();
 	void SetCurrentMenu(EGametimeMenu newMenu);
+	UInteractionHelper* GetInteractionHelper();
 protected:
 	void SetCurrentMenu(UWidget* newMenu);
 
@@ -52,6 +54,8 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 		UCanvasPanel* walktimeCanvas;
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+		UInteractionHelper* interactionHelper;
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 		UImage* crosshairImage;
 

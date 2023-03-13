@@ -11,6 +11,7 @@ class UInventoryDiscardPanel;
 class UCanvasPanel;
 class UCanvasPanelSlot;
 class UInventoryItemInfoPanel;
+class UInventoryItemInfoDraggablePanel;
 class UPickupItemInfoBase;
 class UWidgetSwitcher;
 //class UEquipmentPanel;
@@ -41,10 +42,14 @@ protected:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 		UCanvasPanel* infoPanelsCanvas;
 	//DuplicateTransient?
+	UPROPERTY(EditDefaultsOnly)
+		TSubclassOf<UInventoryItemInfoPanel> hoveredItemInfoPanelClass;
 	UPROPERTY()
 		UCanvasPanelSlot* hoveredInfoPanelSlot;
+	UPROPERTY(EditDefaultsOnly)
+		TSubclassOf<UInventoryItemInfoDraggablePanel> draggableItemInfoPanelClass;
 	UPROPERTY()
-		TArray<UCanvasPanelSlot*> freeInfoPanelSlots;
+		TArray<UCanvasPanelSlot*> draggableInfoPanelSlots;
 
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
@@ -58,6 +63,6 @@ protected:
 		//UEquipmentPanel* playerEqupmentPanel;
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 		UInventoryPanel* secondaryInventoryPanel;
-	UPROPERTY(EditDefaultsOnly)
-		TSubclassOf<UInventoryItemInfoPanel> itemInfoPanelClass;
+	
+	
 };

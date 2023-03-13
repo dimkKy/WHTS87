@@ -8,9 +8,10 @@
 
 class UCameraComponent;
 class USpringArmComponent;
-class UVitalsComponent;
+class UPlayerVitalsComponent;
 class UPlayerInventoryComponent;
 class AInteractableActor;
+class UInteractionHelper;
 
 UCLASS()
 class WHTS87_API APlayerCharacter : public ACharacter
@@ -31,6 +32,8 @@ public:
 	FVector DeprojectCameraScreenPlane(float normX, float normY, ERelativeTransformSpace transformSpace = RTS_Component);
 	//FVector DeprojectCameraScreenPlane(float angleX, float normY, ERelativeTransformSpace transformSpace = RTS_Component);
 	USceneComponent* GetEquipmentAttachParent();
+	//todo
+	void StopInteracting();
 
 protected:
 	virtual void BeginPlay() override;
@@ -42,27 +45,38 @@ protected:
 		USpringArmComponent* cameraSpringArm;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 		UPlayerInventoryComponent* inventory;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		UPlayerVitalsComponent* vitals;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 		float baseTurnRate;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 		float baseLookUpRate;
 
-
 	void MoveForward(float value);
 	void MoveRight(float value);
 	void TurnAtRate(float rate);
 	void LookUpAtRate(float Rate);
 
-	void StartInteract();
+	//get interction target
+	void StartInteraction();
+	//initiate long interaction
 	void OnInteracting();
-	void FinishInteract();
+	//finish instant interaction (if any)
+	void AbortInteraction();
+	
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 		float maxInteractionDistance;
 	AActor* actorInFocus;
-	AInteractableActor* actorCurrentlyInteractingWith;
-	
 
-	FHitResult hitResult;
+	UPROPERTY(DuplicateTransient)
+		AInteractableActor* actorCurrentlyInteractingWith;
+	//negative value means interaction is instant
+	float timeSinceLongInteractionStarted;
+
+	//TWeakObjectPtr<UInteractionHelper> interactionHelper;
+	//UInteractionHelper* interactionHelper;
+
+	FHitResult interactionShotResult;
 };

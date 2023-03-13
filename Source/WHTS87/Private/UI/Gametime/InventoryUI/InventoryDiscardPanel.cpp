@@ -1,7 +1,7 @@
 ﻿// by Dmitry Kolontay
 
 
-#include "UI/Gametime/InventoryDiscardPanel.h"
+#include "UI/Gametime/InventoryUI/InventoryDiscardPanel.h"
 #include "Components/Image.h"
 #include "Components/SizeBox.h"
 #include "Components/Border.h"

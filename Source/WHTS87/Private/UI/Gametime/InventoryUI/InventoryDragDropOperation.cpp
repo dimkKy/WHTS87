@@ -1,7 +1,7 @@
 // by Dmitry Kolontay
 
 
-#include "UI/Gametime/InventoryDragDropOperation.h"
+#include "UI/Gametime/InventoryUI/InventoryDragDropOperation.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 
@@ -32,3 +32,7 @@ UCanvasPanel* UInventoryDragDropOperation::GetWidgetInitialPosition(FVector2D& o
 	outLocalPosition = initialPosition;
 	return initialCanvasPanel;
 }*/
+
+UInventoryDragDropOperation::UInventoryDragDropOperation() : initialCanvasPanel{nullptr}
+{
+}

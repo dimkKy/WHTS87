@@ -3,6 +3,7 @@
 
 #include "UI/HUDManager.h"
 #include "UI/Gametime/GametimeUI.h"
+#include "UI/Gametime/InteractionHelper.h"
 #include "UI/Menus/MainMenuUI.h"
 #include "Player/PlayerCharacter.h"
 
@@ -15,10 +16,10 @@ void AHUDManager::PostInitializeComponents()
 	Super::PostInitializeComponents();
 	check(PlayerOwner);
 	check(IsValid(gametimeUIClass) && IsValid(mainMenuUIClass));
-	if (IsValid(gametimeUIClass)) {
+	if (gametimeUIClass) {
 		gametimeUI = CreateWidget<UGametimeUI>(PlayerOwner, gametimeUIClass); 
 	}
-	if (IsValid(mainMenuUIClass)) {
+	if (mainMenuUIClass) {
 		mainMenuUI = CreateWidget<UMainMenuUI>(PlayerOwner, mainMenuUIClass);
 	}
 }
@@ -40,26 +41,57 @@ void AHUDManager::OnPawnUnPossess()
 	}
 }
 
-void AHUDManager::OnViewTargetChange(AActor* NewViewTarget, FViewTargetTransitionParams TransitionParams)
+void AHUDManager::SetUIType(EUIType newUIType, FViewTargetTransitionParams TransitionParams)
 {
-	UClass* viewTargetClass{ NewViewTarget->GetClass() };
-	if (viewTargetClass->IsChildOf(APlayerCharacter::StaticClass())) {
-		if (gametimeUI && !gametimeUI->IsInViewport()) {
-			gametimeUI->AddToPlayerScreen();
+	switch (newUIType)
+	{
+	case EUIType::Player:
+		if (mainMenuUI && mainMenuUI->IsInViewport()) {
+			mainMenuUI->RemoveFromParent();
 		}
-		SetPlayerInteractionMode(true);
-	}
-	else {
+		if (TransitionParams.BlendTime == 0.f) {
+			if (gametimeUI && !gametimeUI->IsInViewport()) {
+				gametimeUI->AddToPlayerScreen();
+			}
+		}
+		else {
+			//TODO
+			check(false);
+		}	
+		break;
+	case EUIType::MainMenu:
 		if (gametimeUI && gametimeUI->IsInViewport())
-			gametimeUI->RemoveFromViewport();
-		SetPlayerInteractionMode(false);
-		PlayerOwner->SetInputMode(FInputModeUIOnly::FInputModeUIOnly());
+			gametimeUI->RemoveFromParent();
+		if (TransitionParams.BlendTime == 0.f) {
+			if (mainMenuUI && !mainMenuUI->IsInViewport()) {
+				mainMenuUI->AddToPlayerScreen();
+			}
+		}
+		else {
+			//TODO
+			check(false);
+		}
+		break;
+	case EUIType::Cinematic:
+		//TODO
+		check(false);
+		break;
+	case EUIType::NoUI:
+		[[fallthrough]];
+	default:
+		
+		break;
 	}
+}
+
+UInteractionHelper* AHUDManager::GetInteractionHelper()
+{
+	return gametimeUI->GetInteractionHelper();
 }
 
 void AHUDManager::ToggleInventoryMenu()
 {
-	if (gametimeUI && gametimeUI->IsInViewport() && PlayerOwner->GetViewTarget()->GetClass()->IsChildOf(APlayerCharacter::StaticClass())) {
+	if (gametimeUI && gametimeUI->IsInViewport()) {
 		//gametimeUI->ToggleMenu(EGametimeMenu::Inventory);
 		//SetPlayerInteractionMode(gametimeUI->GetCurrentMenu() == EGametimeMenu::Walktime);
 	}
@@ -70,36 +102,11 @@ void AHUDManager::BeginPlay()
 	Super::BeginPlay();
 }
 
-void AHUDManager::SetPlayerInteractionMode(bool bInteractionModeGame, bool bShowMouseInUIMode)
-{
-	if (bInteractionModeGame) {
-		PlayerOwner->SetInputMode(FInputModeGameOnly::FInputModeGameOnly());
-		PlayerOwner->bShowMouseCursor = false;
-		//some checks
-		PlayerOwner->SetCinematicMode(false, false, false, true, true);
-	}
-	else {
-		FInputModeGameAndUI inputMode;
-		inputMode.SetHideCursorDuringCapture(false);
-		PlayerOwner->SetInputMode(inputMode);
-
-		PlayerOwner->bShowMouseCursor = bShowMouseInUIMode;
-		PlayerOwner->SetCinematicMode(true, false, false, true, true);
-		//TODO
-		if (bShowMouseInUIMode) {
-
-		}
-		else {
-
-		}
-	}
-}
-
 #if WITH_EDITOR
 EDataValidationResult AHUDManager::IsDataValid(TArray<FText>& ValidationErrors)
 {
 	EDataValidationResult superResult{ Super::IsDataValid(ValidationErrors) };
-	if (superResult == EDataValidationResult::Valid) {
+	if (superResult != EDataValidationResult::Invalid) {
 		if (!IsValid(gametimeUIClass))
 			ValidationErrors.Add(FText::FromString("Invalid gametimeUIClass"));
 		if (!IsValid(mainMenuUIClass))

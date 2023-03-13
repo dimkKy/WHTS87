@@ -5,8 +5,9 @@
 #include "Components/CanvasPanel.h"
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
-#include "UI/Gametime/InventoryMenu.h"
+#include "UI/Gametime/InventoryUI/InventoryMenu.h"
 #include "UI/Gametime/JournalMenu.h"
+#include "UI/Gametime/InteractionHelper.h"
 
 void UGametimeUI::UpdatePlayerHealth(int32 NewHealth)
 {
@@ -46,6 +47,18 @@ void UGametimeUI::SetCurrentMenu(EGametimeMenu newMenu)
 	default:
 		SetCurrentMenu(walktimeCanvas);
 		break;
+	}
+}
+
+UInteractionHelper* UGametimeUI::GetInteractionHelper()
+{
+
+	//check if interaction is possible from UI side
+	if (IsInViewport() && menuSwitcher->GetActiveWidget() == walktimeCanvas) {
+		return interactionHelper;
+	}
+	else {
+		return nullptr;
 	}
 }
 

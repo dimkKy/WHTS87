@@ -24,16 +24,16 @@ public:
 	virtual TMulticastDelegate<void(bool)>* GetOnInteractedDelegate() PURE_VIRTUAL(AInteractableSwitcherBase::GetOnInteractedDelegate, return nullptr; );
 protected:
 	virtual void BeginPlay() override;
+	UE_NODISCARD virtual bool OnInstantInteraction(AActor* caller) override;
+	UE_NODISCARD virtual bool OnLongInteraction(AActor* caller) override;
 
 	UPROPERTY(EditDefaultsOnly)
 		UStaticMeshComponent* switcherFrame;
 	UPROPERTY(EditDefaultsOnly)
 		UStaticMeshComponent* switcherBody;
-	UE_NODISCARD virtual bool OnInstantInteraction(AActor* caller) override;
-	UE_NODISCARD virtual bool OnLongInteraction(AActor* caller) override;
-	float timeSincePressed;
 	UPROPERTY(EditDefaultsOnly)
 		UTimelineComponent* animationTimeline;
+	float timeSincePressed;
 	//should be normalized with 0.0
 	UPROPERTY(EditDefaultsOnly)
 		UCurveFloat* animationCurve;

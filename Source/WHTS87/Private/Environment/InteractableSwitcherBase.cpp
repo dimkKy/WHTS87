@@ -7,7 +7,7 @@
 AInteractableSwitcherBase::AInteractableSwitcherBase() :switcherFrame{ CreateDefaultSubobject<UStaticMeshComponent>("switcherFrameComponent") },
 switcherBody{ CreateDefaultSubobject<UStaticMeshComponent>("switcherBodyComponent") },
 animationTimeline{ CreateDefaultSubobject<UTimelineComponent>("animationTimelineComponent") },
-animationCurve{ nullptr }, timeSincePressed{ 777.f }
+timeSincePressed{ 777.f }, animationCurve{ nullptr }
 {
 	SetActorTickEnabled(false);
 	PrimaryActorTick.bCanEverTick = true;

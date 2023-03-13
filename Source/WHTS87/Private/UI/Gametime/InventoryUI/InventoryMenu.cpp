@@ -1,16 +1,17 @@
 // by Dmitry Kolontay
 
 
-#include "UI/Gametime/InventoryMenu.h"
+#include "UI/Gametime/InventoryUI/InventoryMenu.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
-#include "UI/Gametime/InventoryItemInfoPanel.h"
+#include "UI/Gametime/InventoryUI/InventoryItemInfoPanel.h"
+#include "UI/Gametime/InventoryUI/InventoryItemInfoDraggablePanel.h"
 #include "Environment/Pickups/PickupItemInfoBase.h"
 //#include "Blueprint/UserWidget.h"
 
 void UInventoryMenu::AddItemInfoPanel(UPickupItemInfoBase* itemInfo)
 {
-	for (auto const& infoPanelSlot : freeInfoPanelSlots)
+	for (auto const& infoPanelSlot : draggableInfoPanelSlots)
 	{
 		/*if (infoPanelSlot->Content->GetItemInfo() == itemInfo) {
 			if (infoPanelSlot->Content->GetVisibility() != ESlateVisibility::Visible)
@@ -20,13 +21,13 @@ void UInventoryMenu::AddItemInfoPanel(UPickupItemInfoBase* itemInfo)
 			return;
 		}*/
 	}
-	UInventoryItemInfoPanel* newInfoPanel{ CreateWidget<UInventoryItemInfoPanel>(this, itemInfoPanelClass) };
+	UInventoryItemInfoPanel* newInfoPanel{ CreateWidget<UInventoryItemInfoPanel>(this, hoveredItemInfoPanelClass) };
 	//newInfoPanel->SetItemInfo(itemInfo, false, GetCachedGeometry().GetLocalSize().X);
 	newInfoPanel->SetVisibility(ESlateVisibility::Visible);
 
 	UCanvasPanelSlot* newSlot{ infoPanelsCanvas->AddChildToCanvas(newInfoPanel) };
 	newSlot->SetAutoSize(true);
-	freeInfoPanelSlots.Add(newSlot);
+	draggableInfoPanelSlots.Add(newSlot);
 }
 
 void UInventoryMenu::ToggleHoverItemInfopanel(UPickupItemInfoBase* itemInfo, bool bEnable, FVector2D desiredGlobalPosition)
@@ -71,8 +72,8 @@ void UInventoryMenu::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 	//SetPositionInViewport
-	//check(IsValid(itemInfoPanelClass));
-	//hoveredInfoPanelSlot = infoPanelsCanvas->AddChildToCanvas(CreateWidget<UItemInfoPanel>(this, itemInfoPanelClass));
+	//check(IsValid(hoveredItemInfoPanelClass));
+	//hoveredInfoPanelSlot = infoPanelsCanvas->AddChildToCanvas(CreateWidget<UItemInfoPanel>(this, hoveredItemInfoPanelClass));
 }
 
 bool UInventoryMenu::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
@@ -86,9 +87,15 @@ EDataValidationResult UInventoryMenu::IsDataValid(TArray<FText>& ValidationError
 	//?
 	EDataValidationResult superResult{ Super::IsDataValid(ValidationErrors) };
 	if (superResult == EDataValidationResult::Valid) {
-		if (!IsValid(itemInfoPanelClass))
-			ValidationErrors.Add(FText::FromString("Invalid itemInfoPanelClass"));
-
+		if (IsValid(hoveredItemInfoPanelClass)) {
+			if(hoveredItemInfoPanelClass.Get()->IsChildOf(UInventoryItemInfoDraggablePanel::StaticClass()))
+				ValidationErrors.Add(FText::FromString("Invalid hoveredItemInfoPanelClass: should not be derived from UInventoryItemInfoDraggablePanel"));
+		}
+		else 
+			ValidationErrors.Add(FText::FromString("Invalid hoveredItemInfoPanelClass"));
+		if (!IsValid(draggableItemInfoPanelClass)) 
+			ValidationErrors.Add(FText::FromString("Invalid draggableItemInfoPanelClass"));
+			
 		if (ValidationErrors.Num() > 0) {
 			superResult = EDataValidationResult::Invalid;
 		}

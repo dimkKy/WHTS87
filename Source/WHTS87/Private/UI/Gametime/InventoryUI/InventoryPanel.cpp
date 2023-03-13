@@ -1,9 +1,9 @@
 ﻿// by Dmitry Kolontay
 
 
-#include "UI/Gametime/InventoryPanel.h"
-#include "UI/Gametime/InventorySlot.h"
-#include "UI/Gametime/InventoryMenu.h"
+#include "UI/Gametime/InventoryUI/InventoryPanel.h"
+#include "UI/Gametime/InventoryUI/InventorySlot.h"
+#include "UI/Gametime/InventoryUI/InventoryMenu.h"
 #include "Components/InventoryComponent.h"
 #include "Components/ScrollBox.h"
 #include "Components/CanvasPanel.h"
@@ -56,6 +56,21 @@ void UInventoryPanel::SetNewInventory(UInventoryComponent* newInventory)
 {
 	representedInventory = TWeakObjectPtr<UInventoryComponent>{ newInventory };
 }
+
+#if WITH_EDITOR
+EDataValidationResult UInventoryPanel::IsDataValid(TArray<FText>& ValidationErrors)
+{
+	EDataValidationResult superResult{ Super::IsDataValid(ValidationErrors) };
+	if (superResult != EDataValidationResult::Invalid) {
+		if (!IsValid(slotClass))
+			ValidationErrors.Add(FText::FromString("Invalid slotClass"));
+		if (ValidationErrors.Num() > 0) {
+			superResult = EDataValidationResult::Invalid;
+		}
+	}
+	return superResult;
+}
+#endif
 
 bool UInventoryPanel::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
 {

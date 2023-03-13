@@ -14,17 +14,14 @@ public:
 	AInteractableActor();
 
 	UE_NODISCARD virtual bool OnInteract(AActor* caller, bool bIsInstantAction = true) final;
-	virtual bool IsCurrentlyInteractable(AActor* caller) const { return true; };
+	//split to long and instant interactions?
+	UE_NODISCARD virtual bool IsCurrentlyInteractable(AActor* caller) const { return true; };
 	//virtual float GetLongInteractionTime() const { return longInteractionTime; };
 	virtual float GetLongInteractionTime() const { return 0.f; };
 
-	/// <summary>
-	/// getter for UI
-	/// </summary>
-	/// <param name="outInstantActionText">untouched if 0 or 2 returned</param>
-	/// <param name="outLongActionText">untouched if 0 or 1 returned</param>
-	/// <returns>0 - no description (not expected); 1 - instant only; 2 - long only; 3 - both</returns>
-	virtual int32 GetInteractionActionDescription(FText& outInstantActionText, FText& outLongActionText) PURE_VIRTUAL(AInteractableActor::GetInteractionActionDescription, return 0;);
+	// getters for UI
+	UE_NODISCARD bool GetInstantActionDescription(FText& outInstantActionText) PURE_VIRTUAL(AInteractableActor::GetInstantActionDescription, return false;);
+	UE_NODISCARD bool GetLongActionDescription(FText& outLongActionText) PURE_VIRTUAL(AInteractableActor::GetLongActionDescription, return false;);
 protected:
 	//UE_NODISCARD virtual bool OnInteract_Internal(AActor* Caller, bool bIsInstantAction) PURE_VIRTUAL(AIInteractable::OnInteract, return false;);
 	UE_NODISCARD virtual bool OnInstantInteraction(AActor* caller) PURE_VIRTUAL(AIInteractable::OnInstantInteraction, return false;);

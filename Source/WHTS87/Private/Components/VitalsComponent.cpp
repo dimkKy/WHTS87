@@ -9,7 +9,20 @@ UVitalsComponent::UVitalsComponent() : maxHPBase{ 100.f }, HPRegenPerSecond{0.5f
 	PrimaryComponentTick.bCanEverTick = true;
 	SetComponentTickInterval(0.5f);
 }
-
+#if WITH_EDITOR
+EDataValidationResult UVitalsComponent::IsDataValid(TArray<FText>& ValidationErrors)
+{
+	EDataValidationResult superResult{ Super::IsDataValid(ValidationErrors) };
+	/*if (superResult != EDataValidationResult::Invalid) {
+		if ())
+			ValidationErrors.Add(FText::FromString());
+		if (ValidationErrors.Num() > 0) {
+			superResult = EDataValidationResult::Invalid;
+		}
+	}*/
+	return superResult;
+}
+#endif
 void UVitalsComponent::BeginPlay()
 {
 	Super::BeginPlay();

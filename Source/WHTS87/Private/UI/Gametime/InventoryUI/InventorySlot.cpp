@@ -1,7 +1,7 @@
 ﻿// by Dmitry Kolontay
 
 
-#include "UI/Gametime/InventorySlot.h"
+#include "UI/Gametime/InventoryUI/InventorySlot.h"
 //#include "Components/CanvasPanelSlot.h"
 #include "Environment/PickupItemContainer.h"
 //#include "UI/Gametime/InventoryMenu.h"
