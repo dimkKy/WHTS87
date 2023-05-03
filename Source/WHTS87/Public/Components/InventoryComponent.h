@@ -21,46 +21,58 @@ public:
 	UInventoryComponent();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	int32 AddContainer(APickupItemContainer* containerToAdd, bool bShouldTopUp = true, bool bBroadcast = true);
-	bool CheckInsertContainer(APickupItemContainer* containerToCheck, int32 XPosition, int32 YPosition);
-	bool TryInsertContainer(APickupItemContainer* containerToTryInserting, int32 XPosition, int32 YPosition, bool bBroadcast = true);
+	UE_NODISCARD int32 CheckInsertContainer(APickupItemContainer& container, const FIntPoint& pos) const;
 
-	APickupItemContainer* RemoveContainer(int32 XPosition, int32 YPosition, bool bBroadcast = true, bool bEject = false);
-	bool RemoveContainer(APickupItemContainer* containerToRemove, bool bBroadcast = true, bool bEject = false);
+	UE_NODISCARD int32 TryAddContainer(APickupItemContainer& container, bool bShouldTopUp, bool bBroadcast);
+	UE_NODISCARD int32 TryAddContainer(APickupItemContainer& container, const FIntPoint& pos, bool bShouldTopUp, bool bBroadcast);
+
+	UE_NODISCARD APickupItemContainer* RemoveContainer(const FIntPoint& pos, bool bEject, bool bBroadcast);
+	UE_NODISCARD bool RemoveContainer(APickupItemContainer& container, bool bEject, bool bBroadcast);
+
+	TMap<APickupItemContainer*, FIntPoint> GetContainersInfo() const;
 
 	//int32 UseItem(int32 XPosition, int32 YPosition, AActor* target, int32 quantityToUse = 0, bool bBroadcast = true);
 	//int32 UseItem(APickupItemContainer* usedContainer, AActor* target, int32 quantityToUse = 0, bool bBroadcast = true, bool bOverrideMinQuantity = false);
 
-	int32 CheckItems(UPickupItemInfoBase* itemToFind, int32 quantityToCheck) const;
-	/// <summary>
-	/// to do
-	/// </summary>
-	bool TryUseItems(UPickupItemInfoBase* itemToUse, int32 quantityToUse = 0, bool bBroadcast = true);
+	UE_NODISCARD int32 CheckItems(UPickupItemInfoBase& item, int32 quantity) const;
+	// to do
+	UE_NODISCARD bool TryUseItems(UPickupItemInfoBase& itemTo, int32 quantity, bool bBroadcast);
 	//UPROPERTY(BlueprintAssignable)
-	
+	UE_NODISCARD bool GetContainerCoordinates(APickupItemContainer& container, FIntPoint& outpos) const;
 
-	
-	bool GetContainerCoordinates(APickupItemContainer* pickedUpContainer, int32& outXPosition, int32& outYPosition) const;
-	int32 GetInventoryXSize() const noexcept { return XInventorySize; };
-	int32 GetInventoryYSize() const noexcept { return YInventorySize; };
-	//two arrays, hide?
-	TMap<APickupItemContainer*, TPair<int32, int32>> containerMap;
-	//UPROPERTY()
-	//	TArray<APickupItemContainer*> containers;
-	//TArray<APickupItemContainer*, TPair<int32, int32>> containerMap;
+	int32 GetXSize() const noexcept 
+		{ return xSize; };
+	int32 GetYSize() const noexcept 
+		{ return ySize; };
 
 	FOnInventoryUpdated onInventoryUpdated;
+
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
 protected:
 	virtual void BeginPlay() override;
-	/// <summary>
-	/// X size is not supposed to change
-	/// </summary>
-	bool ChangeInventorySize(int32 newYInventorySize);
+
+	UE_NODISCARD int32 InsertNewContainer(APickupItemContainer& container, const FIntPoint& pos);
+	UE_NODISCARD int32 MoveContainer(APickupItemContainer& container, const FIntPoint& pos);
+	UE_NODISCARD int32 TryTopUpContainer(APickupItemContainer& target, APickupItemContainer& source, int32 quantity, bool bBroadcast);
+
+	bool CheckFreeCells(const FIntPoint& pos, const FIntPoint& size) const;
+
+	// X size is not supposed to change
+	bool ChangeInventorySize(int32 newYsize);
 	//int32 AddItems(APickupItemContainer* PickedUpContainer, int32 quantity, bool bShouldTopUp = true, bool bBroadcast = true);
+
+	TMap<APickupItemContainer*, int32> containerMap;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ClampMin = "1"))
-		int32 XInventorySize;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ClampMin = "1"))
-		int32 YInventorySize;
-	TArray<TArray<APickupItemContainer*>> cells;
+		int32 xSize;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ClampMin = "2"))
+		int32 ySize;
+	
+	UPROPERTY(VisibleAnywhere, DuplicateTransient)
+	TArray<APickupItemContainer*> cells;
 	//TMultiMap<UClass*, TSharedPtr<FItemContainer>> Items;
+
+	static constexpr int32 minYsize = 4;
 };

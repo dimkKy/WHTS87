@@ -20,47 +20,65 @@ protected:
 /**
  * 
  */
-UCLASS()
+UCLASS(Abstract, Const, NotPlaceable)
 class WHTS87_API UPickupItemInfoBase : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
 public:
 	UPickupItemInfoBase();
-	int32 GetXInventorySize() const { return XInventorySize; }
-	int32 GetYInventorySize() const { return YInventorySize; }
-	int32 GetDefaultSpawnStackSize() const { return defaultSpawnStackSize; }
-	int32 GetMaxStackSize() const { return maxStackSize; }
-	int32 GetMinUsableQuantity() const { return minUsableQuantity; }
-	float GetItemWeight() const { return itemWeightInKG; }
-	UTexture2D* GetThumbnail() const { return thumbnail; }
-	UStaticMesh* GetBodyMesh() const { return bodyMesh; }
+
+	FIntPoint GetInventorySize() const
+		{ return { xSize, ySize }; }
+	int32 GetXInventorySize() const 
+		{ return xSize; }
+	int32 GetYInventorySize() const 
+		{ return ySize; }
+
+	int32 GetDefaultStackSize() const 
+		{ return defaultSpawnStackSize; }
+	int32 GetMaxStackSize() const 
+		{ return maxStackSize; }
+
+	int32 GetMinUsableQuantity() const 
+		{ return minUsableQuantity; }
+
+	float GetItemWeight() const 
+		{ return itemWeightInKG; }
+	const UTexture2D* GetThumbnail() const 
+		{ return thumbnail; }
+	const UStaticMesh* GetBodyMesh() const
+		{ return bodyMesh; }
 	//references?
 	FName GetName() const { return name; }
 
 	FText GetUseActionText() const { return useActionText; }
-	FText GetDisplayName() const { return displayName; }
-	FText GetDescription() const { return description; }
+	virtual FText GetDisplayName() const { return displayName; }
+	virtual FText GetDescription() const { return description; }
 
-	virtual bool ConstructContainerMesh(APickupItemContainer* container);
+	virtual bool ConstructContainerMesh(APickupItemContainer& container) const;
 
 	virtual FPrimaryAssetId GetPrimaryAssetId() const override;
+
 #if WITH_EDITOR
 	virtual EDataValidationResult IsDataValid(TArray<FText>& ValidationErrors) override;
 #endif
 	//container is not needed?
 	//virtual int32 OnUse(APickupItemContainer* container, AActor* caller, AActor* target, int32 timesToUse) PURE_VIRTUAL(UPickupItemGenericInfo::OnUse, return timesToUse;);
-	virtual int32 OnUse(AActor* caller, AActor* target, int32 timesToUse) PURE_VIRTUAL(UPickupItemInfoBase::OnUse, return timesToUse;);
-	virtual void OnContainerTick(APickupItemContainer* container, float deltatime) PURE_VIRTUAL(UPickupItemInfoBase::OnContainerTick, return;);;
+	virtual int32 OnUse(AActor& caller, AActor* target, int32 timesToUse) const 
+		PURE_VIRTUAL(UPickupItemInfoBase::OnUse, return timesToUse;);
+
+	virtual void OnContainerTick(APickupItemContainer& container, float deltatime) const 
+		PURE_VIRTUAL(UPickupItemInfoBase::OnContainerTick, return;);
 
 protected:
 	//copies?
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 		FName name;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ClampMin = "1"))
-		int32 XInventorySize;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ClampMin = "1"))
-		int32 YInventorySize;
+	//
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ClampMin = "1", ClampMax = "4"))
+		int32 xSize;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ClampMin = "1", ClampMax = "4"))
+		int32 ySize;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ClampMin = "1"))
 		int32 maxStackSize;

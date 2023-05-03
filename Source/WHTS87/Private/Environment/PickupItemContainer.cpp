@@ -5,11 +5,14 @@
 #include "Environment/Pickups/PickupItemInfoBase.h"
 #include "Components/InventoryComponent.h"
 
-APickupItemContainer::APickupItemContainer() : body{ CreateDefaultSubobject<UStaticMeshComponent>("body") }, itemInfo{ nullptr }, 
-	ownerInventory{ nullptr }, itemCount { 0 }, bAcceptInteraction{ true }, bOverrideTick{ false }
+APickupItemContainer::APickupItemContainer() : 
+	body{ CreateDefaultSubobject<UStaticMeshComponent>("body") }, 
+	itemInfo{ nullptr }, ownerInventory{ nullptr }, itemCount { 0 }, 
+	bAcceptInteraction{ true }, bOverrideTick{ false }
 {
 	body->SetCollisionObjectType(ECC_PhysicsBody);
-	body->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+	body->SetCollisionResponseToChannel(
+		ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 	body->BodyInstance.bGenerateWakeEvents = true;
 	body->SetGenerateOverlapEvents(false);
 	body->SetSimulatePhysics(true);
@@ -19,9 +22,9 @@ APickupItemContainer::APickupItemContainer() : body{ CreateDefaultSubobject<USta
 void APickupItemContainer::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
-	//?
+	//TODO
 	if (IsValid(itemInfo)) {
-		InitializeWithItem(itemInfo);
+		InitializeWithItem(*itemInfo);
 	}
 }
 
@@ -29,57 +32,50 @@ void APickupItemContainer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	if (itemInfo)
-		itemInfo->OnContainerTick(this, DeltaTime);
-}
-
-UPickupItemInfoBase* APickupItemContainer::GetItemInfo()
-{
-	return itemInfo;
+		itemInfo->OnContainerTick(*this, DeltaTime);
 }
 
 int32 APickupItemContainer::GetLackingItemsCount() const
 {
-	return itemInfo->GetMaxStackSize() - itemCount;
+	int32 lackingQuantity{ itemInfo->GetMaxStackSize() - itemCount };
+	return lackingQuantity > 0 ? lackingQuantity : 0;
 }
 
-bool APickupItemContainer::InitializeWithItem(UPickupItemInfoBase* newItemInfo, bool bOverrideDefaultSpawnParameters, int32 quantityToSpawn)
+bool APickupItemContainer::InitializeWithItem(const UPickupItemInfoBase& newItemInfo, bool bOverrideDefaultSpawnParameters, int32 quantityToSpawn)
 {
 	//INITIALIZATION WITH THE SAME ELEMENT IS POSSIBLE - FIX REQUIRED
 	//https://docs.unrealengine.com/4.27/en-US/ProgrammingAndScripting/ProgrammingWithCPP/Assertions/
 	//validation?
 	//cannot reuse
-	if (IsValid(newItemInfo) && itemInfo != nullptr) {
-		if (newItemInfo->GetMaxStackSize() > 1 || quantityToSpawn > 1) {
-			if (bOverrideDefaultSpawnParameters) {
-				if (quantityToSpawn > newItemInfo->GetMaxStackSize())
-					itemCount = newItemInfo->GetMaxStackSize();
-				else
-					itemCount = quantityToSpawn;
-			}
-			else {
-				itemCount = newItemInfo->GetDefaultSpawnStackSize();
-			}
-		}
-		else {
-			itemCount = 1;
-		}
-		if (newItemInfo->ConstructContainerMesh(this)) {
-			itemInfo = newItemInfo;
-			return true;
-		}
-		else
-			return false;
-
-	}
-	else {
+	if (newItemInfo.IsPendingKill()) {
 		return false;
 	}
+
+	if (newItemInfo.GetMaxStackSize() > 1 || quantityToSpawn > 1) {
+		if (bOverrideDefaultSpawnParameters) {
+			if (quantityToSpawn > newItemInfo.GetMaxStackSize())
+				itemCount = newItemInfo.GetMaxStackSize();
+			else
+				itemCount = quantityToSpawn;
+		}
+		else {
+			itemCount = newItemInfo.GetDefaultStackSize();
+		}
+	}
+	else {
+		itemCount = 1;
+	}
+	if (newItemInfo.ConstructContainerMesh(*this)) {
+		itemInfo = &newItemInfo;
+		return true;
+	}
+	else
+		return false;
 }
 
 void APickupItemContainer::SetContainerState(EContainerState newState)
 {
-	switch (newState)
-	{
+	switch (newState) {
 	case EContainerState::Hidden:
 		SetActorTickEnabled(false);
 		body->SetSimulatePhysics(false);
@@ -126,10 +122,15 @@ void APickupItemContainer::SetContainerState(EContainerState newState)
 	}
 }
 
-bool APickupItemContainer::SetOwnerInventory(UInventoryComponent* newOwnerInventory)
+bool APickupItemContainer::SetOwnerInventory(UInventoryComponent& newOwnerInventory)
 {
-	ownerInventory = TWeakObjectPtr<UInventoryComponent>{ newOwnerInventory };
-	return true;
+	if (ownerInventory.IsValid()) {
+		return false;
+	}
+	else {
+		ownerInventory = TWeakObjectPtr<UInventoryComponent>{ &newOwnerInventory };
+		return true;
+	}
 }
 
 int32 APickupItemContainer::ChangeItemsCount(int32 term)
@@ -139,59 +140,60 @@ int32 APickupItemContainer::ChangeItemsCount(int32 term)
 
 int32 APickupItemContainer::SetItemsCount(int32 newQuantity)
 {
-	if (itemInfo) {
-		int32 oldItemsCount{ itemCount };
-		if (itemInfo->GetMaxStackSize() > newQuantity)
-			itemCount = itemInfo->GetMaxStackSize();
-		else {
-			if (newQuantity > 0) {
-				itemCount = newQuantity;
-			}
-			else {
-				check(false);
-				OnItemsUsedUp();
-				//disposed
-			}
-		}
-		return itemCount - oldItemsCount;
+	if (!ensureAlways(itemInfo)) {
+		return 0;
+	}
+	int32 oldItemsCount{ itemCount };
+	if (itemInfo->GetMaxStackSize() > newQuantity) {
+		itemCount = itemInfo->GetMaxStackSize();
 	}
 	else {
-		return 0;
+		if (newQuantity > 0) {
+			itemCount = newQuantity;
+		}
+		else {
+			check(false);
+			OnItemsUsedUp();
+			//disposed
+		}
 	}
+	return itemCount - oldItemsCount;
 }
 
-int32 APickupItemContainer::UseItemInContainer(AActor* caller, AActor* target, int32 quantityToUse, bool bOverrideMinQuantity)
+int32 APickupItemContainer::UseItemInContainer(AActor& caller, AActor* target, int32 quantityToUse, bool bOverrideMinQuantity)
 {
-	if (itemInfo) {
-		int32 minUsableQuantity{ itemInfo->GetMinUsableQuantity() };
-		if (quantityToUse == 0) {
-			if (bOverrideMinQuantity)
-				return 0;
-			else
-				quantityToUse = minUsableQuantity;
-		}
-		int32 timesUsed{ 0 };
-		if (quantityToUse <= itemCount && (bOverrideMinQuantity || quantityToUse >= minUsableQuantity)) {
-			if (bOverrideMinQuantity) {
-				itemCount -= quantityToUse;
-			}
-			else {
-				//timesUsed += itemInfo->OnUse(this, caller, target, quantityToUse / minUsableQuantity);
-				timesUsed += itemInfo->OnUse(caller, target, quantityToUse / minUsableQuantity);
-				itemCount -= timesUsed * minUsableQuantity;
-			}
-		}
-		//destroy?
-		return timesUsed * minUsableQuantity;
-	}
-	else
+	if (!ensureAlways(itemInfo)) {
 		return 0;
+	}
+	int32 minUsableQuantity{ itemInfo->GetMinUsableQuantity() };
+	if (quantityToUse == 0) {
+		if (bOverrideMinQuantity)
+			return 0;
+		else
+			quantityToUse = minUsableQuantity;
+	}
+	int32 timesUsed{ 0 };
+	if (quantityToUse <= itemCount && (bOverrideMinQuantity || quantityToUse >= minUsableQuantity)) {
+		if (bOverrideMinQuantity) {
+			itemCount -= quantityToUse;
+		}
+		else {
+			//timesUsed += itemInfo->OnUse(this, caller, target, quantityToUse / minUsableQuantity);
+			timesUsed += itemInfo->OnUse(caller, target, quantityToUse / minUsableQuantity);
+			itemCount -= timesUsed * minUsableQuantity;
+		}
+	}
+	//destroy?
+	return timesUsed * minUsableQuantity;
 }
 
-void APickupItemContainer::OnRemoveFromInventory(bool bEject)
+bool APickupItemContainer::RemoveFromInventory(bool bEject)
 {
-
-	if (ownerInventory.IsValid() && bEject) {
+	if (bEject && !ownerInventory.IsValid()) {
+		return false;
+	}
+	if (ownerInventory.IsValid()) {
+		//TODO
 		if (!bOverrideTick) {
 			SetActorTickEnabled(true);
 		}
@@ -203,21 +205,30 @@ void APickupItemContainer::OnRemoveFromInventory(bool bEject)
 		AActor* owningActor{ ownerInventory.Get()->GetOwner() };
 		SetActorLocationAndRotation(owningActor->GetActorLocation(), owningActor->GetActorRotation(), false, nullptr, ETeleportType::ResetPhysics);
 		body->AddImpulse(owningActor->GetVelocity() + owningActor->GetActorForwardVector() * body->GetMass() * 250);
+		ownerInventory.Reset();
 	}
-	ownerInventory = TWeakObjectPtr<UInventoryComponent>{ nullptr };
+	else {
+		//TODO
+	}
+	return true;
 }
 
 void APickupItemContainer::BeginPlay()
 {
 	Super::BeginPlay();
 	body->OnComponentSleep.AddDynamic(this, &APickupItemContainer::OnContainerPutToSleep);
+	/*if (ensureAlwaysMsgf(true, TEXT("%s ran Tick() with bWasInitialized == false"), *GetActorLabel()))
+	{
+		Destroy();
+	}*/
 }
 
 UE_NODISCARD bool APickupItemContainer::OnInstantInteraction(AActor* caller)
 {
 	if (UInventoryComponent* callerInventory{ caller->FindComponentByClass<UInventoryComponent>() }) {
 		int32 oldItemCount{ itemCount };
-		if (callerInventory->AddContainer(this) == oldItemCount) {
+		if (callerInventory->TryAddContainer(*this, true, true) == oldItemCount) {
+			//?  todo
 			if (itemCount > 0) {
 				SetContainerState(EContainerState::Hidden);
 				//in inventory
@@ -227,7 +238,7 @@ UE_NODISCARD bool APickupItemContainer::OnInstantInteraction(AActor* caller)
 				OnItemsUsedUp();
 			}
 		}
-		SetOwnerInventory(callerInventory);
+		SetOwnerInventory(*callerInventory);
 		return true;
 	}
 	return false;
@@ -245,6 +256,7 @@ void APickupItemContainer::OnContainerPutToSleep(UPrimitiveComponent* InComp, FN
 
 void APickupItemContainer::OnItemsUsedUp()
 {
+	Destroy();
 }
 
 #if WITH_EDITOR
@@ -252,6 +264,19 @@ void APickupItemContainer::PostEditChangeProperty(FPropertyChangedEvent& Propert
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 	if (PropertyChangedEvent.Property != NULL && PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(APickupItemContainer, itemInfo))
-		InitializeWithItem(itemInfo);
+		InitializeWithItem(*itemInfo);
+}
+
+EDataValidationResult APickupItemContainer::IsDataValid(TArray<FText>& ValidationErrors)
+{
+	EDataValidationResult superResult{ Super::IsDataValid(ValidationErrors) };
+	if (superResult != EDataValidationResult::Invalid) {
+		if (!IsValid(itemInfo))
+			ValidationErrors.Add(FText::FromString("Invalid itemInfo"));
+		if (ValidationErrors.Num() > 0) {
+			superResult = EDataValidationResult::Invalid;
+		}
+	}
+	return superResult;
 }
 #endif

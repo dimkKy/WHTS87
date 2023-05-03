@@ -43,7 +43,7 @@ void UInventoryItemInfoDraggablePanel::NativeOnDragDetected(const FGeometry& InG
 	dragDropOperation->Payload = this;
 	dragDropOperation->DefaultDragVisual = this;
 	dragDropOperation->Pivot = EDragPivot::MouseDown;
-	dragDropOperation->localDragPivotPosition = InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
+	dragDropOperation->localPivotPos = InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
 	if (UCanvasPanelSlot* canvasPanelSlot{ Cast<UCanvasPanelSlot>(Slot) }) {
 		dragDropOperation->initialPosition = canvasPanelSlot->GetPosition();
 		dragDropOperation->initialCanvasPanel = canvasPanelSlot->Parent;

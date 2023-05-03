@@ -9,12 +9,11 @@
 class UInventoryComponent;
 class UScrollBox;
 class UCanvasPanel;
-class UInventorySlot;
 class UInventoryMenu;
 /**
  * 
  */
-UCLASS()
+UCLASS(Abstract)
 class WHTS87_API UInventoryPanel : public UUserWidget
 {
 	GENERATED_BODY()
@@ -23,19 +22,19 @@ public:
 
 	//virtual void SetInventory(UInventoryComponent* NewInventory);
 	void UpdateAllSlots();
-	UInventoryMenu* GetParentMenu() const;
+	//UInventoryMenu* GetParentMenu() const;
 	void SetNewInventory(UInventoryComponent* newInventory);
 #if WITH_EDITOR
 	virtual EDataValidationResult IsDataValid(TArray<FText>& ValidationErrors) override;
 #endif
 protected:
+	//?
 	TWeakObjectPtr<UInventoryComponent> representedInventory;
 	//move to inventory menu?
-	UPROPERTY(EditDefaultsOnly)
-		TSubclassOf<UInventorySlot> slotClass;
+	
 	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-		UScrollBox* panelScrollBox;
+		UScrollBox* scrollBox;
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 		UCanvasPanel* slotCanvas;
 

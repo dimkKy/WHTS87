@@ -21,7 +21,7 @@ public:
 	//UE_NODISCARD bool SaveWidgetPosition(UCanvasPanelSlot* canvasPanelSlot);
 	//UE_NODISCARD bool SaveWidgetPosition(FVector2D& slotPosition, UCanvasPanel* canvasPanel);
 	//UCanvasPanel* GetWidgetInitialPosition(FVector2D& outLocalPosition);
-	FVector2D localDragPivotPosition;
+	FVector2D localPivotPos;
 	FVector2D initialPosition;
 	UPanelWidget* initialCanvasPanel;
 	//UCanvasPanel* initialCanvasPanel;

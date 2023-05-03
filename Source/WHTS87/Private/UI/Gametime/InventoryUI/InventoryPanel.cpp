@@ -4,6 +4,7 @@
 #include "UI/Gametime/InventoryUI/InventoryPanel.h"
 #include "UI/Gametime/InventoryUI/InventorySlot.h"
 #include "UI/Gametime/InventoryUI/InventoryMenu.h"
+#include "UI/Gametime/InventoryUI/InventoryDragDropOperation.h"
 #include "Components/InventoryComponent.h"
 #include "Components/ScrollBox.h"
 #include "Components/CanvasPanel.h"
@@ -12,45 +13,45 @@
 #include "Environment/Pickups/PickupItemInfoBase.h"
 
 
-
 void UInventoryPanel::NativeOnInitialized()
 {
     Super::NativeOnInitialized();
-    panelScrollBox->ConsumeMouseWheel = EConsumeMouseWheel::WhenScrollingPossible;
-    panelScrollBox->SetOrientation(EOrientation::Orient_Vertical);
-    auto test = Slot;
-    //what is Slot?
+    scrollBox->ConsumeMouseWheel = EConsumeMouseWheel::WhenScrollingPossible;
+    scrollBox->SetOrientation(EOrientation::Orient_Vertical);
 }
 
 void UInventoryPanel::UpdateAllSlots()
 {
-	check(IsValid(slotClass));
-	UInventoryMenu* parentMenu{ GetParentMenu() };
-	if (parentMenu != nullptr && representedInventory.IsValid()) {
-		float tileSize{ parentMenu->GetSlotTileSize()};
-		TArray<UWidget*> currentSlots{ slotCanvas->GetAllChildren() };
-		slotCanvas->ClearChildren();
-		for (const auto& slot : currentSlots) {
-			slot->RemoveFromParent();
-		}
+	if (!ensureAlways(representedInventory.IsValid()))
+		return;
 
-		for (auto const& itemContainerTuple : representedInventory.Get()->containerMap) {
-
-			UInventorySlot* inventorySlot{ CreateWidget<UInventorySlot>(this, slotClass) };
-			inventorySlot->SetItemContainer(itemContainerTuple.Key, tileSize);
-			UCanvasPanelSlot* canvasSlot{ slotCanvas->AddChildToCanvas(inventorySlot) };
-			canvasSlot->SetPosition(FVector2D(tileSize * itemContainerTuple.Value.Key, tileSize * itemContainerTuple.Value.Value));
-			canvasSlot->SetSize(FVector2D(tileSize * itemContainerTuple.Key->GetItemInfo()->GetXInventorySize(), tileSize * itemContainerTuple.Key->GetItemInfo()->GetYInventorySize()));
-		}
+	UInventoryMenu* parent{ CastChecked<UInventoryMenu>(Slot->Parent->WidgetGeneratedBy) };
+	
+	slotCanvas->ClearChildren();
+	for (auto& slot : slotCanvas->GetAllChildren()) {
+		slot->RemoveFromParent();
 	}
+
+	float tileSize{ parent->GetSlotTileSize() };
+	for (auto& containerInfo : representedInventory->GetContainersInfo()) {
+		UInventorySlot* slot{ CreateWidget<UInventorySlot>(this, parent->GetInventorySlotClass()) };
+		slot->SetItemContainer(*containerInfo.Key, tileSize);
+
+		UCanvasPanelSlot* canvasSlot{ slotCanvas->AddChildToCanvas(slot) };
+		canvasSlot->SetPosition(containerInfo.Value * tileSize);
+		canvasSlot->SetSize(containerInfo.Key->GetItemInfo()->GetInventorySize() * tileSize);
+	}
+	//do I need if
+	/*if (Slot->Parent->WidgetGeneratedBy.IsValid() && representedInventory.IsValid()) {
+		
+	}*/
 }
 
+/*
 UInventoryMenu* UInventoryPanel::GetParentMenu() const
 {
-    if (UInventoryMenu* parentMenu{ Cast<UInventoryMenu>(Slot->Parent) })
-        return parentMenu;
-    return nullptr;
-}
+	return CastChecked<UInventoryMenu>(Slot->Parent->WidgetGeneratedBy.Get());
+}*/
 
 void UInventoryPanel::SetNewInventory(UInventoryComponent* newInventory)
 {
@@ -61,12 +62,13 @@ void UInventoryPanel::SetNewInventory(UInventoryComponent* newInventory)
 EDataValidationResult UInventoryPanel::IsDataValid(TArray<FText>& ValidationErrors)
 {
 	EDataValidationResult superResult{ Super::IsDataValid(ValidationErrors) };
-	if (superResult != EDataValidationResult::Invalid) {
-		if (!IsValid(slotClass))
-			ValidationErrors.Add(FText::FromString("Invalid slotClass"));
-		if (ValidationErrors.Num() > 0) {
-			superResult = EDataValidationResult::Invalid;
-		}
+	if (superResult == EDataValidationResult::Invalid) {
+		return superResult;
+	}
+	if (slotCanvas->Slot->Parent != scrollBox)
+		ValidationErrors.Add(FText::FromString("slotCanvas is supposed to be inside scrollBox"));
+	if (ValidationErrors.Num() > 0) {
+		superResult = EDataValidationResult::Invalid;
 	}
 	return superResult;
 }
@@ -74,5 +76,37 @@ EDataValidationResult UInventoryPanel::IsDataValid(TArray<FText>& ValidationErro
 
 bool UInventoryPanel::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
 {
-    return false;
+	if (!ensureAlways(representedInventory.IsValid()))
+		return false;
+
+	UInventoryDragDropOperation* operation{ CastChecked<UInventoryDragDropOperation>(InOperation) };
+
+	if (UInventorySlot* draggedSlot{ Cast<UInventorySlot>(operation->Payload) }) {
+		
+		UInventoryMenu* parentMenu{ CastChecked<UInventoryMenu>(Slot->Parent->WidgetGeneratedBy.Get()) };
+		float tileSize{ parentMenu->GetSlotTileSize() };
+
+		FVector2D slotLocalMinPos{ InGeometry.AbsoluteToLocal(
+			InDragDropEvent.GetScreenSpacePosition()) - operation->localPivotPos };
+
+		FIntPoint newPos{ 
+			FMath::Clamp(FGenericPlatformMath::RoundToInt(
+				slotLocalMinPos.X / tileSize), 0, representedInventory->GetXSize()),
+			FMath::Clamp(FGenericPlatformMath::RoundToInt(
+				(slotLocalMinPos.Y + scrollBox->GetScrollOffset()) / tileSize), 0, representedInventory->GetYSize())
+		};
+
+		APickupItemContainer* containter{ draggedSlot->GetItemContainer() };
+		if (representedInventory->TryAddContainer(*containter, newPos, true, false)) {
+			UpdateAllSlots();
+			if (containter->GetOwnerInventory() != representedInventory && containter->GetItemsCount() > 1) {
+				if (UCanvasPanelSlot * canvasSlot{ Cast<UCanvasPanelSlot>(
+					operation->initialCanvasPanel->AddChild(draggedSlot)) }) {
+					canvasSlot->SetPosition(operation->initialPosition);
+				}
+			}
+		}
+		return true;
+	}
+	return false;
 }

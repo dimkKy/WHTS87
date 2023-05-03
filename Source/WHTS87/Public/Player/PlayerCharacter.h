@@ -25,11 +25,10 @@ public:
 	/// <summary>
 	/// camera screen to world. [-1, -1] - left lower corner
 	/// </summary>
-	/// <param name="normX">will be clamped between -1 and 1</param>
-	/// <param name="normY">same</param>
+	/// <param name="norm">will be clamped between -1 and 1</param>
 	/// <param name="TransformSpace">relative to actor/camera/springarm/world as follows</param>
 	/// <returns></returns>
-	FVector DeprojectCameraScreenPlane(float normX, float normY, ERelativeTransformSpace transformSpace = RTS_Component);
+	FVector DeprojectCameraScreenPlane(const FVector2D& normCord, ERelativeTransformSpace transformSpace = RTS_Component);
 	//FVector DeprojectCameraScreenPlane(float angleX, float normY, ERelativeTransformSpace transformSpace = RTS_Component);
 	USceneComponent* GetEquipmentAttachParent();
 	//todo
@@ -65,7 +64,7 @@ protected:
 	//finish instant interaction (if any)
 	void AbortInteraction();
 	
-
+	//static ?
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 		float maxInteractionDistance;
 	AActor* actorInFocus;

@@ -13,12 +13,11 @@ class USizeBox;
 /**
  * TODO
  */
-UCLASS()
+UCLASS(Abstract)
 class WHTS87_API UAdvancedSlider : public UUserWidget
 {
 	GENERATED_BODY()
 public:
-	UAdvancedSlider(const FObjectInitializer& ObjectInitializer);
 	virtual void NativeOnInitialized() override;
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 		USlider* slider;

@@ -5,12 +5,21 @@
 #include "Environment/PickupItemContainer.h"
 #include "Environment/Pickups/PickupItemInfoBase.h"
 
-UInventoryComponent::UInventoryComponent() : XInventorySize{ 6 }, YInventorySize{ 5 }
+UInventoryComponent::UInventoryComponent() : 
+	xSize{ 6 }, ySize{ 5 }
 {
-	TArray<APickupItemContainer*> cellsColumnTemp;
-	cellsColumnTemp.Init(nullptr, YInventorySize);
-	cells.Init(cellsColumnTemp, XInventorySize);
+	cells.Init(nullptr, ySize * ySize);
 }
+
+#if WITH_EDITOR
+void UInventoryComponent::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+	if (ySize < minYsize) {
+		ySize = minYsize;
+	}
+}
+#endif
 
 void UInventoryComponent::BeginPlay()
 {
@@ -18,41 +27,63 @@ void UInventoryComponent::BeginPlay()
 	
 }
 
-bool UInventoryComponent::ChangeInventorySize(int32 newYInventorySize)
+int32 UInventoryComponent::TryTopUpContainer(APickupItemContainer& target, APickupItemContainer& source, int32 quantity, bool bBroadcast)
 {
-	if (newYInventorySize > YInventorySize) {
-		for (auto& column : cells) {
-			column.SetNum(newYInventorySize);
-			for (int32 i{ YInventorySize }; i < newYInventorySize; ++i) {
-				column[i] = nullptr;
+	if (target.GetItemInfo() != source.GetItemInfo()) {
+		return 0;
+	}
+	//?
+	if (&target == &source) {
+		return quantity;
+	}
+	if (quantity < 1) {
+		quantity = source.GetItemsCount();
+		if (quantity < 1) {
+			return 0;
+		}
+	}
+	int32 fittedAmount{ -1 * source.ChangeItemsCount(-1 * target.ChangeItemsCount(quantity)) };
+
+	if (bBroadcast && fittedAmount > 0 && onInventoryUpdated.IsBound())
+		onInventoryUpdated.Broadcast();
+	return fittedAmount;
+}
+
+bool UInventoryComponent::CheckFreeCells(const FIntPoint& pos, const FIntPoint& size) const
+{
+	if (pos.X + size.X > xSize || pos.Y + size.Y > ySize) {
+		return false;
+	}
+	for (FIntPoint offset{ 0 }; offset.Y < size.Y; ++offset.Y) {
+		for (offset.X = 0; offset.X < size.X; ++offset.X) {
+			if (cells[pos.X + offset.X + (pos.Y + offset.Y) * xSize]) {
+				return false;
 			}
+		}
+	}
+	return true;
+}
+
+bool UInventoryComponent::ChangeInventorySize(int32 newYsize)
+{
+	if (newYsize > ySize) {
+		//check how it works
+		cells.SetNum(newYsize * xSize);
+		for (int32 i{ ySize * xSize - 1 }; i < ySize * xSize; ++i) {
+			cells[i]++;
 		}
 		return true;
 	}
-	if (newYInventorySize < YInventorySize) {
-		//TODO
-		
-		if (true) {
-			for (auto& column : cells) {
-				column.SetNum(newYInventorySize, false);
+	if (newYsize < ySize && newYsize > minYsize) {
+		for (int32 n{ newYsize * xSize }; n < cells.Num(); ++n) {
+			if (cells[n]) {
+				return false;
 			}
-			return true;
 		}
-		else {
-			return false;
-		}
-		
+		ySize = newYsize;
+		return true;
 	}
 	return true;
-	
-	YInventorySize = newYInventorySize;
-	
-	//Cells.Init(FCellsColumn(YInventorySize), XInventorySize);
-	//TArray<FItemContainer*> CellsColumnTemp;
-	TArray<APickupItemContainer*> CellsColumnTemp;
-	CellsColumnTemp.Init(nullptr, YInventorySize);
-	cells.Init(CellsColumnTemp, XInventorySize);
-	
 }
 
 void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -60,76 +91,186 @@ void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
-int32 UInventoryComponent::AddContainer(APickupItemContainer* containerToAdd, bool bShouldTopUp, bool bBroadcast)
+int32 UInventoryComponent::TryAddContainer(APickupItemContainer& container, bool bShouldTopUp, bool bBroadcast)
 {
-	if (IsValid(containerToAdd)) {
-		int32 addedAmount{ 0 };
-		int32 quantityToFit{ containerToAdd->GetItemsCount() };
-		if (bShouldTopUp) {
-			auto iterator{ containerMap.CreateConstIterator() };
-			while (quantityToFit > 0 && iterator) {
-				if (iterator.Key()->GetItemInfo()->GetClass() == containerToAdd->GetItemInfo()->GetClass()) {
-					int32 fittedAmount{ std::min(quantityToFit, iterator.Key()->GetLackingItemsCount()) };
-					quantityToFit -= fittedAmount;
-					addedAmount += fittedAmount;
-					containerToAdd->ChangeItemsCount(-fittedAmount);
-					iterator.Key()->ChangeItemsCount(fittedAmount);
-				}
-				++iterator;
-			}
-		}
-		if (quantityToFit > 0) {
-			//TODO
-			int32 XLimit{ XInventorySize - containerToAdd->GetItemInfo()->GetXInventorySize() };
-			int32 YLimit{ YInventorySize - containerToAdd->GetItemInfo()->GetYInventorySize() };
-			for (int32 YPosition{ 0 }; YPosition <= YLimit; YPosition++) {
-				for (int32 XPosition = 0; XPosition <= XLimit; XPosition++) {
-					if (TryInsertContainer(containerToAdd, XPosition, YPosition, false)) {
-						addedAmount += containerToAdd->GetItemsCount();
-						containerToAdd->SetOwnerInventory(this);
-						if (onInventoryUpdated.IsBound() && bBroadcast)
-							onInventoryUpdated.Broadcast();
-						return addedAmount;
-					}
-				}
-			}
-		}
-		if (onInventoryUpdated.IsBound() && bBroadcast && addedAmount > 0)
-			onInventoryUpdated.Broadcast();
-		return addedAmount;
-	}
-	else
+	//?
+	if (container.IsPendingKill() || container.GetItemsCount() < 1 || container.GetOwnerInventory() == this) {
+		//todo
+		check(false);
 		return 0;
-}
+	}
 
-bool UInventoryComponent::CheckInsertContainer(APickupItemContainer* containerToCheck, int32 XPosition, int32 YPosition)
-{
-	if (IsValid(containerToCheck)) {
-		int32 YLimit{ containerToCheck->GetItemInfo()->GetYInventorySize() };
-		int32 XLimit{ containerToCheck->GetItemInfo()->GetXInventorySize() };
-		for (int32 Y{ 0 }; Y < YLimit; Y++) {
-			for (int32 X{ 0 }; X < XLimit; X++) {
-				if (cells[XPosition + X][YPosition + Y] != nullptr)
-					return false;
+	int32 addedAmount{ 0 };
+	int32 quantityToFit{ container.GetItemsCount() };
+	if (bShouldTopUp) {
+		auto iterator{ containerMap.CreateConstIterator() };
+		while (quantityToFit > 0 && iterator) {
+			if (int32 fittedAmount{ TryTopUpContainer(*iterator.Key(), container, quantityToFit, false) }) {
+				quantityToFit -= fittedAmount;
+				addedAmount += fittedAmount;
+			}
+			++iterator;
+		}
+	}
+	if (quantityToFit > 0) {
+		FIntPoint limits{ xSize, ySize };
+		limits -= container.GetItemInfo()->GetInventorySize();
+
+		for (FIntPoint pos{ 0 }; pos.Y <= limits.Y; ++pos.Y) {
+			for (; pos.X <= limits.X; ++pos.X) {
+				if (int32 ret{ InsertNewContainer(container, pos) }) {
+					addedAmount += ret;
+					//container.SetOwnerInventory(this);
+					pos.Y = limits.Y;
+					break;
+				}
 			}
 		}
-		return true;
 	}
-	else
-		return false;
+	else {
+		//?
+	}
+	if (bBroadcast && addedAmount > 0 && onInventoryUpdated.IsBound())
+		onInventoryUpdated.Broadcast();
+	return addedAmount;
 }
 
-bool UInventoryComponent::TryInsertContainer(APickupItemContainer* containerToTryInserting, int32 XPosition, int32 YPosition, bool bBroadcast)
+int32 UInventoryComponent::TryAddContainer(APickupItemContainer& container, const FIntPoint& pos, bool bShouldTopUp, bool bBroadcast)
 {
-	if (CheckInsertContainer(containerToTryInserting, XPosition, YPosition)) {
-		int32 YLimit{ containerToTryInserting->GetItemInfo()->GetYInventorySize() };
-		int32 XLimit{ containerToTryInserting->GetItemInfo()->GetXInventorySize() };
-		for (int32 Y = 0; Y < YLimit; Y++) {
-			for (int32 X = 0; X < XLimit; X++)
-				cells[XPosition + X][YPosition + Y] = containerToTryInserting; //?
+	if (container.IsPendingKill() || container.GetItemsCount() < 1) {
+		//todo
+		check(false);
+		return 0;
+	}
+
+	int32 targetCell{ pos.X + (pos.Y) * xSize };
+	if (cells[targetCell]) {
+		//possible top up
+		if (bShouldTopUp) {
+			return TryTopUpContainer(*cells[targetCell], container, 0, true);
 		}
-		containerMap.Add(containerToTryInserting, TPair<int32, int32>{XPosition, YPosition});
-		containerToTryInserting->SetOwnerInventory(this);
+		else {
+			return 0;
+		}
+	}
+	else {
+		int32 out{ 0 };
+		if (container.GetOwnerInventory() == this) {
+			out = MoveContainer(container, pos);
+		}
+		else {
+			out = InsertNewContainer(container, pos);
+		}
+
+		if (bBroadcast && out && onInventoryUpdated.IsBound()) {
+			onInventoryUpdated.Broadcast();
+		}
+		return out;
+	}
+}
+
+int32 UInventoryComponent::CheckInsertContainer(APickupItemContainer& container, const FIntPoint& pos) const
+{
+	if (container.IsPendingKill())
+		return 0;
+	int32 targetCell{ pos.X + (pos.Y) * xSize };
+	if (cells[targetCell]) {
+		//possible top up
+		if (cells[targetCell]->GetItemInfo() == container.GetItemInfo()) {
+			return cells[targetCell]->GetLackingItemsCount();
+		}
+		else {
+			return 0;
+		}	
+	}
+	else {
+		//no top-up
+		if (CheckFreeCells(pos, container.GetItemInfo()->GetInventorySize())) {
+			return container.GetItemsCount();
+		}
+		else {
+			return 0;
+		}
+	}
+}
+
+int32 UInventoryComponent::InsertNewContainer(APickupItemContainer& container, const FIntPoint& pos)
+{
+	if (CheckInsertContainer(container, pos) && container.RemoveFromInventory(false)) {
+		containerMap.Add(&container, pos.X + (pos.Y) * xSize);
+		container.SetOwnerInventory(*this);
+		return container.GetItemsCount();
+	}
+	else {
+		return 0;
+	}
+}
+
+int32 UInventoryComponent::MoveContainer(APickupItemContainer& container, const FIntPoint& pos)
+{
+	check(false);
+	//to do with int32
+	if (auto coordinate{ containerMap.Find(&container) }) {
+		//add validity check?
+		//check if insertion is possible
+		if (pos.X + (pos.Y) * xSize == *coordinate) {
+			return 0;
+		}
+
+		FIntPoint size{ container.GetItemInfo()->GetInventorySize() };
+		for (FIntPoint offset{ 0 }; offset.Y < size.Y; ++offset.Y) {
+			for (offset.X = 0; offset.X < size.X; ++offset.X) {
+				//int32 cellToCheck{ *coordinate + offset.X + (offset.Y) * xSize };
+				if (int32 cellToCheck{ *coordinate + offset.X + (offset.Y) * xSize };
+					cells[cellToCheck] != nullptr && cells[cellToCheck] != &container) {
+					return 0;
+				}
+			}
+		}
+		for (FIntPoint offset{ 0 }; offset.Y < size.Y; ++offset.Y) {
+			for (offset.X = 0; offset.X < size.X; ++offset.X) {
+				cells[pos.X + offset.X + (offset.Y + pos.Y) * xSize] = &container;
+			}
+		}
+
+
+		for (FIntPoint offset{ 0 }; offset.Y < size.Y; ++offset.Y) {
+			for (offset.X = 0; offset.X < size.X; ++offset.X) {
+				cells[*coordinate + offset.X + (offset.Y) * xSize] = nullptr;
+			}
+		}
+		return container.GetItemsCount();
+	}
+	return false;
+
+}
+
+APickupItemContainer* UInventoryComponent::RemoveContainer(const FIntPoint& pos, bool bEject, bool bBroadcast)
+{
+	APickupItemContainer* container{ cells[pos.X + (pos.Y) * xSize] };
+	if (RemoveContainer(*container, bBroadcast, bEject)) {
+		return container;
+	}
+	else {
+		return nullptr;
+	}	
+}
+
+bool UInventoryComponent::RemoveContainer(APickupItemContainer& container, bool bEject, bool bBroadcast)
+{
+	int32 oldPos{ -999 };
+	containerMap.RemoveAndCopyValue(&container, oldPos);
+	if (oldPos < 0) {
+		//UE_LOG(LogTemp, Error, TEXT("Removing container has wrong coordinates: X is %d, Y is %d"), containerPos.Key, containerPos.Value);
+		return false;
+	}
+	if (container.RemoveFromInventory(bEject)) {
+		FIntPoint size{ container.GetItemInfo()->GetInventorySize() };
+		for (int32 y{ 0 }; y < size.Y; ++y) {
+			for (int32 x{ 0 }; x < size.X; ++x) {
+				cells[oldPos + x + y * xSize] = nullptr;
+			}
+		}
 		if (bBroadcast && onInventoryUpdated.IsBound())
 			onInventoryUpdated.Broadcast();
 		return true;
@@ -139,43 +280,24 @@ bool UInventoryComponent::TryInsertContainer(APickupItemContainer* containerToTr
 	}
 }
 
-APickupItemContainer* UInventoryComponent::RemoveContainer(int32 XPosition, int32 YPosition, bool bBroadcast, bool bEject)
+TMap<APickupItemContainer*, FIntPoint> UInventoryComponent::GetContainersInfo() const
 {
-	if (RemoveContainer(cells[XPosition][YPosition], bBroadcast, bEject))
-		return cells[XPosition][YPosition];
-	else
-		return nullptr;
+	TMap<APickupItemContainer*, FIntPoint> out;
+	for (auto& containerInfo : containerMap) {
+		out.Add(containerInfo.Key, 
+			{ containerInfo.Value % xSize, containerInfo.Value / xSize });
+	}
+	return out;
 }
 
-bool UInventoryComponent::RemoveContainer(APickupItemContainer* containerToRemove, bool bBroadcast, bool bEject)
-{
-	TPair<int32, int32> containerPosition{ -999, -999 };
-	containerMap.RemoveAndCopyValue(containerToRemove, containerPosition);
-	if (containerPosition.Key == -999 || containerPosition.Value == -999) {
-		//UE_LOG(LogTemp, Error, TEXT("Removing container has wrong coordinates: X is %d, Y is %d"), containerPosition.Key, containerPosition.Value);
-		return false;
-	}
-	int32 YLimit{ containerToRemove->GetItemInfo()->GetYInventorySize() };
-	int32 XLimit{ containerToRemove->GetItemInfo()->GetXInventorySize() };
-	for (int32 Y{ 0 }; Y < YLimit; Y++) {
-		for (int32 X{ 0 }; X < XLimit; X++) {
-			cells[containerPosition.Key + X][containerPosition.Value + Y] = nullptr;
-		}
-	}
-	containerToRemove->OnRemoveFromInventory(bEject);
-	if (bBroadcast && onInventoryUpdated.IsBound())
-		onInventoryUpdated.Broadcast();
-	return true;
-}
-
-int32 UInventoryComponent::CheckItems(UPickupItemInfoBase* itemToFind, int32 requestedQuantity) const
+int32 UInventoryComponent::CheckItems(UPickupItemInfoBase& itemToFind, int32 requestedQuantity) const
 {
 	if (requestedQuantity < 1)
 		return 0;
 	int32 lackingQuantity{ requestedQuantity };
 	auto iterator{ containerMap.CreateConstIterator() };
 	while (lackingQuantity > 0 && iterator) {
-		if (iterator.Key()->GetItemInfo()->GetClass() == itemToFind->GetClass()) {
+		if (iterator.Key()->GetItemInfo() == &itemToFind) {
 			lackingQuantity -= iterator.Key()->GetItemsCount();
 		}
 		++iterator;
@@ -187,12 +309,12 @@ int32 UInventoryComponent::CheckItems(UPickupItemInfoBase* itemToFind, int32 req
 	}
 }
 
-bool UInventoryComponent::TryUseItems(UPickupItemInfoBase* itemToUse, int32 quantityToUse, bool bBroadcast)
+bool UInventoryComponent::TryUseItems(UPickupItemInfoBase& itemToUse, int32 quantityToUse, bool bBroadcast)
 {
 	if (CheckItems(itemToUse, quantityToUse) == quantityToUse) {
 		auto iterator{ containerMap.CreateConstIterator() };
 		while (quantityToUse > 0 && iterator) {
-			if (iterator.Key()->GetItemInfo()->GetClass() == itemToUse->GetClass()) {
+			if (iterator.Key()->GetItemInfo() == &itemToUse) {
 
 				int32 availableAmount{ std::min(quantityToUse, iterator.Key()->GetItemsCount()) };
 				//disposal
@@ -203,7 +325,6 @@ bool UInventoryComponent::TryUseItems(UPickupItemInfoBase* itemToUse, int32 quan
 			}
 			++iterator;
 		}
-
 		return true;
 	}
 	else {
@@ -211,12 +332,11 @@ bool UInventoryComponent::TryUseItems(UPickupItemInfoBase* itemToUse, int32 quan
 	}
 }
 
-bool UInventoryComponent::GetContainerCoordinates(APickupItemContainer* pickedUpContainer, int32& outXPosition, int32& outYPosition) const
+bool UInventoryComponent::GetContainerCoordinates(APickupItemContainer& container, FIntPoint& outpos) const
 {
-	auto coordinates{ containerMap.Find(pickedUpContainer) };
-	if (coordinates != nullptr) {
-		outXPosition = coordinates->Key;
-		outYPosition = coordinates->Value;
+	if (auto coordinate{ containerMap.Find(&container) }) {
+		outpos.X = *coordinate % xSize;
+		outpos.Y = *coordinate / xSize;
 		return true;
 	}
 	else

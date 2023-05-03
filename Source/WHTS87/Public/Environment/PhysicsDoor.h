@@ -68,10 +68,10 @@ protected:
 	bool bUnknownState;
 	bool bIsClosed;
 	bool bIsPendingClose;
-	float maxOpenHalfAngle;
-	float physicsConstraintStrength;
-	float physicsConstraintDamping;
-	float doorPushingImpulse;
-	FRotator openConstraitPosition;
-	FRotator closeConstraitPosition;
+	constexpr static float maxOpenHalfAngle = 46.f;
+	constexpr static float physicsConstraintStrength = 5.f;
+	constexpr static float physicsConstraintDamping = 10.f;
+	constexpr static float doorPushingImpulse = 15.f;
+	const static FRotator openConstraitPosition;
+	const static FRotator closeConstraitPosition;
 };

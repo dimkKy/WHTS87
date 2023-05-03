@@ -5,12 +5,13 @@
 #include "Components/StaticMeshComponent.h"
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
 
+const FRotator APhysicsDoor::openConstraitPosition = { 0.f, maxOpenHalfAngle * 2.f, 0.f };
+const FRotator APhysicsDoor::closeConstraitPosition = { 0.f, maxOpenHalfAngle * -2.f, 0.f };
+
 APhysicsDoor::APhysicsDoor() : doorFrame{ CreateDefaultSubobject<UStaticMeshComponent>("doorFrame") },
 	door{ CreateDefaultSubobject<UStaticMeshComponent>("door") },
 	physicsConstraint{ CreateDefaultSubobject<UPhysicsConstraintComponent>("constraint") },
-	lockState { EDoorlockState::ClosedLock }, bUnknownState{ true }, bIsClosed{ true }, bIsPendingClose{ false },
-	maxOpenHalfAngle{ 46.f }, physicsConstraintStrength{ 5.f }, physicsConstraintDamping{ 10.f }, doorPushingImpulse{ 15.f },
-	openConstraitPosition{ 0.f, maxOpenHalfAngle * 2.f, 0.f }, closeConstraitPosition{ 0.f, maxOpenHalfAngle * -2.f, 0.f }
+	lockState { EDoorlockState::ClosedLock }, bUnknownState{ true }, bIsClosed{ true }, bIsPendingClose{ false }
 {
 	SetActorTickInterval(1.f);
 
@@ -27,7 +28,7 @@ APhysicsDoor::APhysicsDoor() : doorFrame{ CreateDefaultSubobject<UStaticMeshComp
 	door->SetAngularDamping(physicsConstraintDamping);
 	door->SetGenerateOverlapEvents(false);
 
-	physicsConstraint->SetAngularSwing1Limit(EAngularConstraintMotion::ACM_Limited, maxOpenHalfAngle/* + 0.1f*/);
+	physicsConstraint->SetAngularSwing1Limit(EAngularConstraintMotion::ACM_Limited, maxOpenHalfAngle);
 	physicsConstraint->SetAngularSwing2Limit(EAngularConstraintMotion::ACM_Locked, 0.f);
 	physicsConstraint->SetAngularTwistLimit(EAngularConstraintMotion::ACM_Locked, 0.f);
 	physicsConstraint->SetAngularDriveMode(EAngularDriveMode::TwistAndSwing);

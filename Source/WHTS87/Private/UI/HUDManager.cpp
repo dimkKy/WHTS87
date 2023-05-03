@@ -7,7 +7,8 @@
 #include "UI/Menus/MainMenuUI.h"
 #include "Player/PlayerCharacter.h"
 
-AHUDManager::AHUDManager() : gametimeUI{nullptr}, mainMenuUI{nullptr}
+AHUDManager::AHUDManager() : 
+	gametimeUI{nullptr}, mainMenuUI{nullptr}
 {
 }
 
@@ -43,8 +44,7 @@ void AHUDManager::OnPawnUnPossess()
 
 void AHUDManager::SetUIType(EUIType newUIType, FViewTargetTransitionParams TransitionParams)
 {
-	switch (newUIType)
-	{
+	switch (newUIType) {
 	case EUIType::Player:
 		if (mainMenuUI && mainMenuUI->IsInViewport()) {
 			mainMenuUI->RemoveFromParent();

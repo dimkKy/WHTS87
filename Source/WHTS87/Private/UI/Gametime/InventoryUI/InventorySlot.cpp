@@ -5,10 +5,12 @@
 //#include "Components/CanvasPanelSlot.h"
 #include "Environment/PickupItemContainer.h"
 //#include "UI/Gametime/InventoryMenu.h"
+#include "UI/Gametime/InventoryUI/InventoryDragDropOperation.h"
+#include "Components/InventoryComponent.h"
 #include "Components/CanvasPanel.h"
-
 #include "Components/TextBlock.h"
 #include "Components/Image.h"
+#include "Engine/Texture2D.h"
 #include "Framework/MultiBox/MultiBoxBuilder.h"
 
 
@@ -19,14 +21,31 @@ void UInventorySlot::NativeOnInitialized()
 	Super::NativeOnInitialized();
 }
 
-void UInventorySlot::SetItemContainer(APickupItemContainer* NewItemContainer, float tileSize)
+void UInventorySlot::SetItemContainer(APickupItemContainer& container, float tileSize)
 {
+	representedContainer = &container;
+	check(false)
+}
+
+void UInventorySlot::RemoveContainerFromInventory(bool bEject, bool bBroadcast)
+{
+	if (APickupItemContainer* container{ representedContainer.Get() }) {
+		if (UInventoryComponent * inventory{ container->GetOwnerInventory() }) {
+			if (inventory->RemoveContainer(*container, true, false)) {
+				RemoveFromParent();
+			}
+		}
+	}
+	else {
+		//?
+		check(false);
+		RemoveFromParent();
+	}
 }
 
 void UInventorySlot::UpdateSlot()
 {
-	if (representedContainer.IsValid()) {
-		APickupItemContainer* container{ representedContainer.Get() };
+	if (APickupItemContainer * container{ representedContainer.Get() }) {
 		//itemCount->SetText(FText::FromString(FString::FromInt(container->GetItemsCount())));
 		/*if (UTexture2D * possibleThumbnai{ container->GetItemInfo()->GetThumbnail() }) {
 			thumbnail->SetBrushFromTexture(possibleThumbnai);
@@ -38,7 +57,13 @@ void UInventorySlot::UpdateSlot()
 	}
 	else {
 		//call to update
+		RemoveFromParent();
 	}
+}
+
+UTexture2D* UInventorySlot::GetThumbnail()
+{
+	return thumbnail ? Cast<UTexture2D>(thumbnail->Brush.GetResourceObject()) : nullptr;
 }
 
 void UInventorySlot::RemoveFromParent()
@@ -111,13 +136,13 @@ FReply UInventorySlot::NativeOnMouseButtonDoubleClick(const FGeometry& InGeometr
 void UInventorySlot::NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation)
 {
 	Super::NativeOnDragDetected(InGeometry, InMouseEvent, OutOperation);
-	/*UInventoryDragDropOperator* dragDropOperator{NewObject<UInventoryDragDropOperator>()};
+	UInventoryDragDropOperation* operation{NewObject<UInventoryDragDropOperation>()};
 	//?
-	dragDropOperator->Payload = this;
-	dragDropOperator->DefaultDragVisual = this;
-	dragDropOperator->Pivot = EDragPivot::MouseDown;
-	dragDropOperator->LocalDragPivotPosition = InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
-	OutOperation = dragDropOperator;*/
+	operation->Payload = this;
+	operation->DefaultDragVisual = this;
+	operation->Pivot = EDragPivot::MouseDown;
+	operation->localPivotPos = InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
+	OutOperation = operation;
 	//if?
 	SetVisibility(ESlateVisibility::HitTestInvisible);
 }
@@ -127,7 +152,6 @@ void UInventorySlot::NativeOnDragCancelled(const FDragDropEvent& InDragDropEvent
 	Super::NativeOnDragCancelled(InDragDropEvent, InOperation);
 	//?
 	SetVisibility(Slot->Parent->GetVisibility());
-
 }
 
 void UInventorySlot::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)

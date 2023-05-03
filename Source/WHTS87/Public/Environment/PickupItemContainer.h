@@ -25,7 +25,7 @@ enum class EContainerState : uint8
 /**
  * 
  */
-UCLASS()
+UCLASS(Blueprintable)
 class WHTS87_API APickupItemContainer : public AInteractableActor
 {
 	GENERATED_BODY()
@@ -34,27 +34,38 @@ public:
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void Tick(float DeltaTime) override;
 
-	virtual bool IsCurrentlyInteractable(AActor* caller) const override { return bAcceptInteraction; };
+	virtual bool IsCurrentlyInteractable(AActor* caller) const override 
+		{ return bAcceptInteraction; };
 
-	UStaticMeshComponent* GetBody() { return body; };
-	UPickupItemInfoBase* GetItemInfo();
-	UInventoryComponent* GetOwnerInventory() { return ownerInventory.IsValid() ? ownerInventory.Get() : nullptr; };
-	int32 GetItemsCount() const { return itemCount; };
+	UStaticMeshComponent* GetBody() const
+		{ return body; };
+
+	const UPickupItemInfoBase* GetItemInfo() const
+		{ return itemInfo; };
+
+	UInventoryComponent* GetOwnerInventory() const
+		{ return ownerInventory.Get(); };
+
+	int32 GetItemsCount() const 
+		{ return itemCount; };
+
 	int32 GetLackingItemsCount() const;
-	bool InitializeWithItem(UPickupItemInfoBase* newItemInfo, bool bOverrideDefaultSpawnParameters = false, int32 quantityToSpawn = 1);
+
+	bool InitializeWithItem(const UPickupItemInfoBase& newItemInfo, bool bOverrideDefaultSpawnParameters = false, int32 quantityToSpawn = 1);
+
 	//hide or event delete
 	void SetContainerState(EContainerState newState);
-	bool SetOwnerInventory(UInventoryComponent* newOwnerInventory);
+	bool SetOwnerInventory(UInventoryComponent& newOwnerInventory);
+	// returns itemCount - oldItemsCount
 	int32 ChangeItemsCount(int32 term);
+	// returns itemCount - oldItemsCount
 	int32 SetItemsCount(int32 newQuantity);
-	/// <summary>
-	/// Overriding will cause the item logic not to be called, caller should manage it himself.
-	/// </summary>
+	/// Overriding will cause the item logic not to be called, caller should manage it himself. delete
 	/// <returns>Number of used items</returns>
-	int32 UseItemInContainer(AActor* caller, AActor* target, int32 quantityToUse = 0, bool bOverrideMinQuantity = false);
+	int32 UseItemInContainer(AActor& caller, AActor* target, int32 quantityToUse = 0, bool bOverrideMinQuantity = false);
 
 	//TODO
-	void OnRemoveFromInventory(bool bEject);
+	UE_NODISCARD bool RemoveFromInventory(bool bEject);
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -65,8 +76,8 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 		UStaticMeshComponent* body;
-	UPROPERTY(VisibleAnywhere)
-		UPickupItemInfoBase* itemInfo;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+		const UPickupItemInfoBase* itemInfo;
 	TWeakObjectPtr<UInventoryComponent> ownerInventory;
 
 	UPROPERTY(EditInstanceOnly, meta = (ClampMin = "1"))
@@ -77,7 +88,9 @@ protected:
 	bool bAcceptInteraction;
 	bool bOverrideTick;
 
+	static constexpr float throwForceMultiplier = 400.f;
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+	virtual EDataValidationResult IsDataValid(TArray<FText>& ValidationErrors) override;
 #endif
 };

@@ -10,10 +10,6 @@
 
 const FNumberFormattingOptions UAdvancedSlider::valueFormattingOptions{ FNumberFormattingOptions().SetMaximumFractionalDigits(0) };
 
-UAdvancedSlider::UAdvancedSlider(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
-{
-}
-
 void UAdvancedSlider::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
@@ -28,18 +24,30 @@ void UAdvancedSlider::NativeOnInitialized()
 	decreaseValueButton->SetClickMethod(EButtonClickMethod::PreciseClick);
 	decreaseValueButton->OnClicked.AddDynamic(this, &UAdvancedSlider::OnDecreaseValueButtonPressed);
 	//auto scale = UWidgetLayoutLibrary::GetViewportScale(GetWorld()->GetGameViewport());
-	FVector2D measuredSliderValueTextSize{ FSlateApplication::Get().GetRenderer()->GetFontMeasureService().Get().Measure("999", sliderValueText->Font) };
-	sliderValueText->SetMinDesiredWidth(measuredSliderValueTextSize.X);
-	sizeBox->SetMinDesiredWidth(measuredSliderValueTextSize.Y * 10.f);
+	FVector2D sliderTextSize{ 
+		FSlateApplication::Get().GetRenderer()->GetFontMeasureService().Get().Measure("999", sliderValueText->Font) };
+	sliderValueText->SetMinDesiredWidth(sliderTextSize.X);
+	sizeBox->SetMinDesiredWidth(sliderTextSize.Y * 10.f);
 	
 	OnSliderValueChanged(100.f);
 	//ForceLayoutPrepass();
 }
-
+#if WITH_EDITOR
+#include "Blueprint/WidgetTree.h"
 EDataValidationResult UAdvancedSlider::IsDataValid(TArray<FText>& ValidationErrors)
 {
-	return EDataValidationResult();
+	EDataValidationResult superResult{ Super::IsDataValid(ValidationErrors) };
+	if (superResult != EDataValidationResult::Invalid) {
+		if (WidgetTree->RootWidget != sizeBox)
+			ValidationErrors.Add(FText::FromString("sizeBox is supposed to be root"));
+
+		if (ValidationErrors.Num() > 0) {
+			superResult = EDataValidationResult::Invalid;
+		}
+	}
+	return superResult;
 }
+#endif
 
 void UAdvancedSlider::OnIncreaseValueButtonPressed()
 {

@@ -2,6 +2,9 @@
 
 
 #include "UI/Gametime/InventoryUI/InventoryDiscardPanel.h"
+#include "UI/Gametime/InventoryUI/InventoryDragDropOperation.h"
+#include "UI/Gametime/InventoryUI/InventorySlot.h"
+#include "UI/Gametime/InventoryUI/InventoryMenu.h"
 #include "Components/Image.h"
 #include "Components/SizeBox.h"
 #include "Components/Border.h"
@@ -9,63 +12,51 @@
 void UInventoryDiscardPanel::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
-	//переписать
-	disvardingItemThubnail->SetOpacity(0.f);
+	//redo
+	discardingItemThubnail->SetOpacity(0.f);
+	//discardingItemThubnail->Slot <- cast to set alignment
 }
 
 bool UInventoryDiscardPanel::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
 {
-	/*
-	UInventoryDragDropOperator* DragDropOperator = CastChecked<UInventoryDragDropOperator>(InOperation);
-	if (DragDropOperator->Payload->GetClass()->IsChildOf(UInventorySlot::StaticClass())) {
-		UInventorySlot* DraggedInventorySlot = CastChecked<UInventorySlot>(DragDropOperator->Payload);
-		APickupItemContainer* itemContainerToRemove = DraggedInventorySlot->GetItemContainer();
-		check(IsValid(itemContainerToRemove));
-		MainImage->SetOpacity(0.f);
-		itemContainerToRemove->GetOwnerInventory()->RemoveContainer(itemContainerToRemove, true, true);
+	//UInventoryDragDropOperation* operation{ CastChecked<UInventoryDragDropOperation>(InOperation) };
+	if (UInventorySlot * draggedInventorySlot{ Cast<UInventorySlot>(CastChecked<UInventoryDragDropOperation>(InOperation)->Payload) }) {
+		draggedInventorySlot->RemoveContainerFromInventory(true, false);
+		APickupItemContainer* itemContainerToRemove{ draggedInventorySlot->GetItemContainer() };
+		discardingItemThubnail->SetOpacity(0.f);
 		return true;
-	}*/
-	disvardingItemThubnail->SetOpacity(0.f);
+	}
+	else {
+		//?
+		FSlateApplication::Get().CancelDragDrop();
+	}
+	discardingItemThubnail->SetOpacity(0.f);
 	return false;
 }
 
 void UInventoryDiscardPanel::NativeOnDragEnter(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
 {
-	/*
-	UInventoryDragDropOperator* DragDropOperator = CastChecked<UInventoryDragDropOperator>(InOperation);
-	if (DragDropOperator->Payload->GetClass()->IsChildOf(UInventorySlot::StaticClass())) {
-		UInventorySlot* DraggedInventorySlot = CastChecked<UInventorySlot>(DragDropOperator->Payload);
-		UTexture2D* PossibleItemThumbnail = DraggedInventorySlot->GetItemContainer()->GetItemInfo()->GetThumbnail();
-		if (IsValid(PossibleItemThumbnail)) {
-			disvardingItemThubnail->SetBrushFromTexture(PossibleItemThumbnail);
-			FVector2D imageSize = disvardingItemThubnail->Brush.GetImageSize();
-			//
-			//FVector2D desiredSize = mainSizeBox->GetDesiredSize();
-			FVector2D localSize = disvardingItemThubnail->GetCachedGeometry().GetLocalSize();
-			//
-			if (localSize.X < localSize.Y) {
-				//MainBorder->SetHorizontalAlignment(EHorizontalAlignment::HAlign_Fill);
-				//MainBorder->SetVerticalAlignment(EVerticalAlignment::VAlign_Center);
-				imageSize.Y = localSize.X * imageSize.Y / imageSize.X;
-				imageSize.X = localSize.X;
-
+	if (UInventorySlot * draggedInventorySlot{ Cast<UInventorySlot>(CastChecked<UInventoryDragDropOperation>(InOperation)->Payload) }) {
+		UTexture2D* possibleItemThumbnail{ draggedInventorySlot->GetThumbnail() };
+		if (IsValid(possibleItemThumbnail)) {
+			discardingItemThubnail->SetBrushFromTexture(possibleItemThumbnail);
+			FVector2D availableSize{ GetCachedGeometry().GetLocalSize() };
+			FVector2D desiredBrushSize{ draggedInventorySlot->GetCachedGeometry().GetLocalSize() };
+			float desiredRatio{ desiredBrushSize.X / desiredBrushSize.Y };
+			if (desiredRatio > availableSize.X / availableSize.Y) {
+				//other widget is more stretched than this
+				discardingItemThubnail->SetBrushSize({ availableSize.X, availableSize.X / desiredRatio });
 			}
 			else {
-				//MainBorder->SetHorizontalAlignment(EHorizontalAlignment::HAlign_Center);
-				//MainBorder->SetVerticalAlignment(EVerticalAlignment::VAlign_Fill);
-				imageSize.X = localSize.Y * imageSize.X / imageSize.Y;
-				imageSize.Y = localSize.Y;
+				//other widget is less stretched than this
+				discardingItemThubnail->SetBrushSize({ availableSize.Y * desiredRatio, availableSize.Y });
 			}
-			disvardingItemThubnail->SetBrushSize(imageSize);
-			disvardingItemThubnail->SetOpacity(1.f);
+			discardingItemThubnail->SetOpacity(1.f);
 		}
-		else {
-			//defaultthumbnail?
-		}
-	}*/
+	}
 }
 
 void UInventoryDiscardPanel::NativeOnDragLeave(const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
 {
-	disvardingItemThubnail->SetOpacity(0.f);
+	discardingItemThubnail->SetOpacity(0.f);
 }

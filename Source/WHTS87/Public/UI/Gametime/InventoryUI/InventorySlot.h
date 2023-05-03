@@ -9,6 +9,7 @@
 class APickupItemContainer;
 class UTextBlock;
 class UImage;
+class UTexture2D;
 class USizeBox;
 class UInventoryPanel;
 class UInventoryComponent;
@@ -22,10 +23,16 @@ class WHTS87_API UInventorySlot : public UUserWidget
 	GENERATED_BODY()
 public:
 	virtual void NativeOnInitialized() override;
-	void SetItemContainer(APickupItemContainer* NewItemContainer, float tileSize);
-	void UpdateSlot();
 	virtual void RemoveFromParent() override;
-	APickupItemContainer* GetItemContainer() const { return representedContainer.IsValid() ? representedContainer.Get() : nullptr; };
+
+	void SetItemContainer(APickupItemContainer& container, float tileSize);
+	void RemoveContainerFromInventory(bool bEject = false, bool bBroadcast = true);
+	void UpdateSlot();
+
+	APickupItemContainer* GetItemContainer() 
+		{ return representedContainer.Get(); };
+
+	UTexture2D* GetThumbnail();
 	//UInventoryPanel* GetParentPanel () const;
 	//UInventoryPanel* GetInventoryPanel() const { return owningPanel; };
 	//UPROPERTY(EditAnywhere, Category = "Config")
@@ -33,8 +40,6 @@ public:
 	//void ToggleInfopanelVisibility(bool bVisible);
 protected:
 	TWeakObjectPtr<APickupItemContainer> representedContainer;
-	//remove?
-	TWeakObjectPtr<APickupItemContainer> representedInventory;
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 		UImage* thumbnail;
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))

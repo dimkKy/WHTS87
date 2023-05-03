@@ -12,7 +12,7 @@ class UBorder;
 /**
  * 
  */
-UCLASS()
+UCLASS(Abstract)
 class WHTS87_API UInventoryDiscardPanel : public UUserWidget
 {
 	GENERATED_BODY()
@@ -24,7 +24,7 @@ protected:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 		UBorder* border;
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-		UImage* disvardingItemThubnail;
+		UImage* discardingItemThubnail;
 
 	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
 	virtual void NativeOnDragEnter(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;

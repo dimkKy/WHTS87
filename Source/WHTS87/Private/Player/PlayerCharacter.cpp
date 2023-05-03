@@ -36,18 +36,19 @@ APlayerCharacter::APlayerCharacter() : firstPersonCamera{ CreateDefaultSubobject
 	cameraSpringArm->CameraRotationLagSpeed = 50.f;
 }
 
-FVector APlayerCharacter::DeprojectCameraScreenPlane(float normX, float normY, ERelativeTransformSpace transformSpace)
+FVector APlayerCharacter::DeprojectCameraScreenPlane(const FVector2D& _normCord, ERelativeTransformSpace transformSpace)
 {
-	normX = FMath::Clamp(normX, -1.f, 1.f);
-	normY = FMath::Clamp(normY, -1.f, 1.f);
-	float nearClipPlaneDist{ firstPersonCamera->OrthoNearClipPlane };
-	if (FMath::IsNearlyZero(nearClipPlaneDist) || nearClipPlaneDist < 0.f) {
-		if (IsValid(GEngine))
-			nearClipPlaneDist = GEngine->NearClipPlane;
-		else
-			nearClipPlaneDist = 10.f;
+	FVector2D normCoord{ _normCord.ClampAxes(-1.f, 1.f) };
+	float nearClipDist{ firstPersonCamera->OrthoNearClipPlane };
+	if (FMath::IsNearlyZero(nearClipDist) || nearClipDist < 0.f) {
+		if (IsValid(GEngine)) {
+			nearClipDist = GEngine->NearClipPlane;
+		}
+		else {
+			nearClipDist = 10.f; //default value used by GEngine
+		}	
 	}
-	FVector2D halvedPlaneSize{ 0.f, nearClipPlaneDist * FMath::Tan(firstPersonCamera->FieldOfView * 0.5f) };
+	FVector2D halvedPlaneSize{ nearClipDist * FMath::Tan(firstPersonCamera->FieldOfView * 0.5f) };
 	halvedPlaneSize.X = halvedPlaneSize.Y * firstPersonCamera->AspectRatio;
 	/*FVector2D halvedPlaneSize;
 	if (auto playerController = Cast<APlayerController>(Controller)) {
@@ -55,7 +56,7 @@ FVector APlayerCharacter::DeprojectCameraScreenPlane(float normX, float normY, E
 			switch (localPlayer->AspectRatioAxisConstraint.GetValue())
 			{
 			case AspectRatio_MaintainXFOV:
-				halvedPlaneSize.X = nearClipPlaneDist * FMath::Tan(firstPersonCameraComp->FieldOfView * 0.5f);
+				halvedPlaneSize.X = nearClipDist * FMath::Tan(firstPersonCameraComp->FieldOfView * 0.5f);
 				halvedPlaneSize.Y = halvedPlaneSize.X / firstPersonCameraComp->AspectRatio;
 				break;
 			case AspectRatio_MaintainYFOV:
@@ -63,46 +64,45 @@ FVector APlayerCharacter::DeprojectCameraScreenPlane(float normX, float normY, E
 			case AspectRatio_MajorAxisFOV:
 				[[fallthrough]];
 			default:
-				halvedPlaneSize.Y = nearClipPlaneDist * FMath::Tan(firstPersonCameraComp->FieldOfView * 0.5f);
+				halvedPlaneSize.Y = nearClipDist * FMath::Tan(firstPersonCameraComp->FieldOfView * 0.5f);
 				halvedPlaneSize.X = halvedPlaneSize.Y * firstPersonCameraComp->AspectRatio;
 				break;
 			}
 		}
 		else {
-			halvedPlaneSize.Y = nearClipPlaneDist * FMath::Tan(firstPersonCameraComp->FieldOfView * 0.5f);
+			halvedPlaneSize.Y = nearClipDist * FMath::Tan(firstPersonCameraComp->FieldOfView * 0.5f);
 			halvedPlaneSize.X = halvedPlaneSize.Y * firstPersonCameraComp->AspectRatio;
 		}
 
 	}
 	else {
-		halvedPlaneSize.Y = nearClipPlaneDist * FMath::Tan(firstPersonCameraComp->FieldOfView * 0.5f);
+		halvedPlaneSize.Y = nearClipDist * FMath::Tan(firstPersonCameraComp->FieldOfView * 0.5f);
 		halvedPlaneSize.X = halvedPlaneSize.Y * firstPersonCameraComp->AspectRatio;
 	}*/
 
-	switch (transformSpace)
-	{
+	switch (transformSpace) {
 	case RTS_World:
 	{
-		FTransform cameraWorldTransform{ firstPersonCamera->GetComponentTransform() };
-		return cameraWorldTransform.GetLocation() +
-			cameraWorldTransform.GetRotation().RotateVector({ nearClipPlaneDist, halvedPlaneSize.X * normX, halvedPlaneSize.Y * normY });
+		FTransform cameraWorld{ firstPersonCamera->GetComponentTransform() };
+		return cameraWorld.GetLocation() +
+			cameraWorld.GetRotation().RotateVector({ nearClipDist, halvedPlaneSize.X * normCoord.X, halvedPlaneSize.Y * normCoord.Y });
 	}
 	break;
 	case RTS_Actor:
 		return firstPersonCamera->GetRelativeLocation() +
-			firstPersonCamera->GetRelativeRotation().RotateVector({ nearClipPlaneDist, halvedPlaneSize.X * normX, halvedPlaneSize.Y * normY });
+			firstPersonCamera->GetRelativeRotation().RotateVector({ nearClipDist, halvedPlaneSize.X * normCoord.X, halvedPlaneSize.Y * normCoord.Y });
 		break;
 	case RTS_ParentBoneSpace:
 	{
 		FTransform armToCameraRelativeTransform{ cameraSpringArm->GetRelativeTransform() };
 		return armToCameraRelativeTransform.GetLocation() +
-			armToCameraRelativeTransform.GetRotation().RotateVector({ nearClipPlaneDist, halvedPlaneSize.X * normX, halvedPlaneSize.Y * normY });
+			armToCameraRelativeTransform.GetRotation().RotateVector({ nearClipDist, halvedPlaneSize.X * normCoord.X, halvedPlaneSize.Y * normCoord.Y });
 	}
 	break;
 	case RTS_Component:
 		[[fallthrough]];
 	default:
-		return { nearClipPlaneDist, halvedPlaneSize.X * normX, halvedPlaneSize.Y * normY };
+		return { nearClipDist, halvedPlaneSize.X * normCoord.X, halvedPlaneSize.Y * normCoord.Y };
 		break;
 	}
 }

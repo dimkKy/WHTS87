@@ -9,7 +9,7 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(Abstract)
 class WHTS87_API USettingsSubmenu : public UUserWidget
 {
 	GENERATED_BODY()
