@@ -23,8 +23,8 @@ public:
 	//UCanvasPanel* GetWidgetInitialPosition(FVector2D& outLocalPosition);
 	FVector2D localPivotPos;
 	FVector2D initialPosition;
-	UPanelWidget* initialCanvasPanel;
-	//UCanvasPanel* initialCanvasPanel;
+	UPanelWidget* initialPanel;
+	//UCanvasPanel* initialPanel;
 protected:
 	
 };

@@ -89,10 +89,7 @@ bool UInventoryMenu::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEv
 EDataValidationResult UInventoryMenu::IsDataValid(TArray<FText>& ValidationErrors)
 {
 	//?
-	EDataValidationResult superResult{ Super::IsDataValid(ValidationErrors) };
-	if (superResult == EDataValidationResult::Invalid) {
-		return superResult;
-	}
+	Super::IsDataValid(ValidationErrors);
 	if (IsValid(hoveredItemInfoPanelClass)) {
 		if (hoveredItemInfoPanelClass.Get()->IsChildOf(UInventoryItemInfoDraggablePanel::StaticClass())) {
 			ValidationErrors.Add(FText::FromString(
@@ -106,9 +103,8 @@ EDataValidationResult UInventoryMenu::IsDataValid(TArray<FText>& ValidationError
 		ValidationErrors.Add(FText::FromString("Invalid draggableItemInfoPanelClass"));
 	if (!IsValid(itemInfoSlotClass))
 		ValidationErrors.Add(FText::FromString("Invalid itemInfoSlotClass"));
-	if (ValidationErrors.Num() > 0) {
-		superResult = EDataValidationResult::Invalid;
-	}
-	return superResult;
+
+	return ValidationErrors.Num() > 0 ?
+		EDataValidationResult::Invalid : EDataValidationResult::Valid;
 }
 #endif

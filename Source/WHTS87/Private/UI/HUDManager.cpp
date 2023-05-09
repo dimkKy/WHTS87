@@ -6,9 +6,10 @@
 #include "UI/Gametime/InteractionHelper.h"
 #include "UI/Menus/MainMenuUI.h"
 #include "Player/PlayerCharacter.h"
+#include <CoreSystems/WHTS87UserSettings.h>
 
 AHUDManager::AHUDManager() : 
-	gametimeUI{nullptr}, mainMenuUI{nullptr}
+	gametimeUI{nullptr}, mainMenuUI{nullptr}, startupMenuUI{nullptr}
 {
 }
 
@@ -37,13 +38,15 @@ void AHUDManager::OnPawnUnPossess()
 	if (gametimeUI) {
 		//gametimeUI->OnPawnUnPossess();
 		//gametimeUI->RemoveFromViewport();
-		if(gametimeUI->IsInViewport())
+		if (gametimeUI->IsInViewport()) {
 			gametimeUI->RemoveFromParent();
+		}
 	}
 }
 
 void AHUDManager::SetUIType(EUIType newUIType, FViewTargetTransitionParams TransitionParams)
 {
+	//TODO
 	switch (newUIType) {
 	case EUIType::Player:
 		if (mainMenuUI && mainMenuUI->IsInViewport()) {
@@ -89,32 +92,42 @@ UInteractionHelper* AHUDManager::GetInteractionHelper()
 	return gametimeUI->GetInteractionHelper();
 }
 
-void AHUDManager::ToggleInventoryMenu()
+/*void AHUDManager::ToggleInventoryMenu()
 {
 	if (gametimeUI && gametimeUI->IsInViewport()) {
 		//gametimeUI->ToggleMenu(EGametimeMenu::Inventory);
 		//SetPlayerInteractionMode(gametimeUI->GetCurrentMenu() == EGametimeMenu::Walktime);
 	}
-}
+}*/
 
 void AHUDManager::BeginPlay()
 {
 	Super::BeginPlay();
+	if (CastChecked<UWHTS87UserSettings>(GEngine->GetGameUserSettings())->showStartupMenu) {
+		ShowStartupMenu();
+	}
+}
+
+void AHUDManager::ShowStartupMenu()
+{
+	if (startupMenuUI && !startupMenuUI->IsInViewport()) {
+		startupMenuUI->AddToPlayerScreen(TNumericLimits<int32>::Max());
+	}
 }
 
 #if WITH_EDITOR
 EDataValidationResult AHUDManager::IsDataValid(TArray<FText>& ValidationErrors)
 {
-	EDataValidationResult superResult{ Super::IsDataValid(ValidationErrors) };
-	if (superResult != EDataValidationResult::Invalid) {
-		if (!IsValid(gametimeUIClass))
-			ValidationErrors.Add(FText::FromString("Invalid gametimeUIClass"));
-		if (!IsValid(mainMenuUIClass))
-			ValidationErrors.Add(FText::FromString("Invalid mainMenuUIClass"));
-		if (ValidationErrors.Num() > 0) {
-			superResult = EDataValidationResult::Invalid;
-		}
-	}
-	return superResult;
+	
+	Super::IsDataValid(ValidationErrors);
+	if (!IsValid(gametimeUIClass))
+		ValidationErrors.Add(FText::FromString("Invalid gametimeUIClass"));
+	if (!IsValid(mainMenuUIClass))
+		ValidationErrors.Add(FText::FromString("Invalid mainMenuUIClass"));
+	if (!IsValid(startupMenuUIClass))
+		ValidationErrors.Add(FText::FromString("Invalid startupMenuUIClass"));
+
+	return ValidationErrors.Num() > 0 ?
+		EDataValidationResult::Invalid : EDataValidationResult::Valid;
 }
 #endif

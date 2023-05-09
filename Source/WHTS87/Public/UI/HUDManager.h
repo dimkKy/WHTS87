@@ -39,19 +39,31 @@ public:
 	void SetUIType(EUIType newUIType, FViewTargetTransitionParams TransitionParams);
 	UInteractionHelper* GetInteractionHelper();
 
-	void ToggleInventoryMenu();
-
+	//void ToggleInventoryMenu();
+	
 #if WITH_EDITOR
 	virtual EDataValidationResult IsDataValid(TArray<FText>& ValidationErrors) override;
 #endif
 protected:
+
 	virtual void BeginPlay() override;
+
+	void ShowStartupMenu();
+
 	UPROPERTY(EditDefaultsOnly)
 		TSubclassOf<UGametimeUI> gametimeUIClass;
 	UPROPERTY()
 		UGametimeUI* gametimeUI;
+
 	UPROPERTY(EditDefaultsOnly)
 		TSubclassOf<UGametimeUI> mainMenuUIClass;
 	UPROPERTY()
 		UMainMenuUI* mainMenuUI;
+
+	UPROPERTY(EditDefaultsOnly)
+		TSubclassOf<UGametimeUI> startupMenuUIClass;
+	UPROPERTY()
+		UMainMenuUI* startupMenuUI;
+
+	//UUserWidget* menus[static_cast<int32>(EUIType::NoUI)];
 };

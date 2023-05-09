@@ -25,23 +25,30 @@ public:
 #if WITH_EDITOR
 	virtual EDataValidationResult IsDataValid(TArray<FText>& ValidationErrors) override;
 #endif
+
+	constexpr static float minValue = 0.f;
+	constexpr static float stepSize = 1.f;
+	constexpr static float maxValue = 100.f;
+	constexpr static float minXYratio = 10.f;
+	
 protected:
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 		USizeBox* sizeBox;
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-		UButton* increaseValueButton;
+		UButton* increaseButton;
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-		UButton* decreaseValueButton;
+		UButton* decreaseButton;
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-		UTextBlock* sliderDescriptionText;
+		UTextBlock* description;
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-		UTextBlock* sliderValueText;
+		UTextBlock* valueText;
 	UFUNCTION()
-		void OnIncreaseValueButtonPressed();
+		void OnIncreaseButtonPressed();
 	UFUNCTION()
-		void OnDecreaseValueButtonPressed();
+		void OnDecreaseButtonPressed();
 	UFUNCTION()
 		void OnSliderValueChanged(float newValue);
-	static const FNumberFormattingOptions valueFormattingOptions;
+
+	static const FNumberFormattingOptions formattingOptions;
 };

@@ -5,17 +5,37 @@
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
 #include "Templates/SharedPointer.h"
+//#include "Templates/Models.h"
+#include <type_traits>
 #include "PickupItemInfoBase.generated.h"
 
 class APickupItemContainer;
 
-struct FItemNonStaticProperties : public TSharedFromThis<FItemNonStaticProperties, ESPMode::NotThreadSafe>
-{
-public:
-	FItemNonStaticProperties() : someValue{ 0.f } {};
-	float someValue;
-protected:
 
+//TModels 
+
+struct FItemPropertiesBase;
+
+template <class TProperties>
+concept DerivedItemProperties =
+	std::is_base_of<FItemPropertiesBase, TProperties>::value &&
+	std::negation<std::is_same<FItemPropertiesBase, TProperties>>::value;
+
+struct FItemPropertiesBase/* : public TSharedFromThis<FItemPropertiesBase, ESPMode::NotThreadSafe>*/
+{
+	template <DerivedItemProperties TProperties, class...Args>
+	static TUniquePtr<FItemPropertiesBase> MakeUniquePtr(const Args&...args) {
+		/*static_assert(
+			std::is_base_of<FItemPropertiesBase, TProperties>::value &&
+			std::negation<std::is_same<FItemPropertiesBase, TProperties>>::value, 
+			"wrong Properties class");*/
+		TProperties* newProperties{ new TProperties(args...) };
+		return TUniquePtr<FItemPropertiesBase>(static_cast<FItemPropertiesBase*>(newProperties));
+	}
+
+
+protected:
+	FItemPropertiesBase() {};
 };
 /**
  * 
@@ -26,6 +46,9 @@ class WHTS87_API UPickupItemInfoBase : public UPrimaryDataAsset
 	GENERATED_BODY()
 public:
 	UPickupItemInfoBase();
+
+	virtual TUniquePtr<FItemPropertiesBase> MakeNonStaticProperties() const
+		PURE_VIRTUAL(UPickupItemInfoBase::MakeNonStaticProperties(), return {nullptr};);
 
 	FIntPoint GetInventorySize() const
 		{ return { xSize, ySize }; }
@@ -55,7 +78,7 @@ public:
 	virtual FText GetDisplayName() const { return displayName; }
 	virtual FText GetDescription() const { return description; }
 
-	virtual bool ConstructContainerMesh(APickupItemContainer& container) const;
+	virtual bool ConstructContainer(APickupItemContainer& container) const;
 
 	virtual FPrimaryAssetId GetPrimaryAssetId() const override;
 

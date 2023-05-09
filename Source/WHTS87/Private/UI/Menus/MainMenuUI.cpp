@@ -7,18 +7,19 @@
 #include "UI/Menus/NewGameSubmenu.h"
 #include "UI/Menus/LoadGameSubmenu.h"
 #include "UI/Menus/SettingsSubmenu.h"
+#include "WHTS87Utils.h"
 
 void UMainMenuUI::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 	
-	newGameMenuButton->SetClickMethod(EButtonClickMethod::PreciseClick);
-	loadGameMenuButton->SetClickMethod(EButtonClickMethod::PreciseClick);
-	settingsMenuButton->SetClickMethod(EButtonClickMethod::PreciseClick);
+	newGameButton->SetClickMethod(EButtonClickMethod::PreciseClick);
+	loadGameButton->SetClickMethod(EButtonClickMethod::PreciseClick);
+	settingsButton->SetClickMethod(EButtonClickMethod::PreciseClick);
 
-	newGameMenuButton->OnClicked.AddDynamic(this, &UMainMenuUI::ToggleNewGameSubmenu);
-	loadGameMenuButton->OnClicked.AddDynamic(this, &UMainMenuUI::ToggleLoadGameSubmenu);
-	settingsMenuButton->OnClicked.AddDynamic(this, &UMainMenuUI::ToggleSettingsSubmenu);
+	newGameButton->OnClicked.AddDynamic(this, &UMainMenuUI::ToggleNewGameSubmenu);
+	loadGameButton->OnClicked.AddDynamic(this, &UMainMenuUI::ToggleLoadGameSubmenu);
+	settingsButton->OnClicked.AddDynamic(this, &UMainMenuUI::ToggleSettingsSubmenu);
 	
 	submenuSwitcher->SetActiveWidget(newGameSubmenu);
 	submenuSwitcher->SetVisibility(ESlateVisibility::Hidden);
@@ -34,49 +35,55 @@ void UMainMenuUI::SetCurrentSubmenu(EMainMenuPage newSubmenu)
 			return;*/
 	
 	case EMainMenuPage::Settings:
-		SetCurrentSubmenu(settingsSubmenu);
+		SetCurrentSubmenu(*settingsSubmenu);
 		break;
 	case EMainMenuPage::NewGame:
-		SetCurrentSubmenu(newGameSubmenu);
+		SetCurrentSubmenu(*newGameSubmenu);
 		break;
 	case EMainMenuPage::LoadGame:	
 		[[fallthrough]];
 	default:
-		SetCurrentSubmenu(loadGameSubmenu);
+		SetCurrentSubmenu(*loadGameSubmenu);
 		break;
 	}
 }
 
-void UMainMenuUI::SetCurrentSubmenu(UUserWidget* newSubmenu)
+void UMainMenuUI::SetCurrentSubmenu(UUserWidget& newSubmenu)
 {
-	if (newSubmenu) {
-		if (newSubmenu == submenuSwitcher->GetActiveWidget()) {
-			if (submenuSwitcher->GetVisibility() == ESlateVisibility::Visible)
-				submenuSwitcher->SetVisibility(ESlateVisibility::Hidden);
-			else
-				submenuSwitcher->SetVisibility(ESlateVisibility::Visible);
+	//REDO
+	if (&newSubmenu == submenuSwitcher->GetActiveWidget()) {
+		switch (submenuSwitcher->GetVisibility()){
+		case ESlateVisibility::Visible:
+			submenuSwitcher->SetVisibility(ESlateVisibility::Hidden);
+			break;
+		case ESlateVisibility::Hidden:
+			submenuSwitcher->SetVisibility(ESlateVisibility::Visible);
+			break;
+		default:
+			break;
 		}
-		else {
-			//Parenting to some abstract submenuWidget does not look like an effective way either
-			if (newSubmenu == loadGameSubmenu || newSubmenu == newGameSubmenu || newSubmenu == settingsSubmenu) {
-				submenuSwitcher->SetActiveWidget(newSubmenu);
-				submenuSwitcher->SetVisibility(ESlateVisibility::Visible);
-			}
+	}
+	else {
+		//Parenting to some abstract submenuWidget does not look like an effective way either
+		if (WHTS87Utils::IsIn(newSubmenu, 
+			loadGameSubmenu, newGameSubmenu, settingsSubmenu)) {
+			submenuSwitcher->SetActiveWidget(&newSubmenu);
+			submenuSwitcher->SetVisibility(ESlateVisibility::Visible);
 		}
 	}
 }
 
 void UMainMenuUI::ToggleNewGameSubmenu()
 {
-	SetCurrentSubmenu(newGameSubmenu);
+	SetCurrentSubmenu(*newGameSubmenu);
 }
 
 void UMainMenuUI::ToggleLoadGameSubmenu()
 {
-	SetCurrentSubmenu(loadGameSubmenu);
+	SetCurrentSubmenu(*loadGameSubmenu);
 }
 
 void UMainMenuUI::ToggleSettingsSubmenu()
 {
-	SetCurrentSubmenu(settingsSubmenu);
+	SetCurrentSubmenu(*settingsSubmenu);
 }

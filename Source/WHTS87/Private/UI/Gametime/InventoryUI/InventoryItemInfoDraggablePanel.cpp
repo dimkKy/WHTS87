@@ -46,7 +46,7 @@ void UInventoryItemInfoDraggablePanel::NativeOnDragDetected(const FGeometry& InG
 	dragDropOperation->localPivotPos = InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
 	if (UCanvasPanelSlot* canvasPanelSlot{ Cast<UCanvasPanelSlot>(Slot) }) {
 		dragDropOperation->initialPosition = canvasPanelSlot->GetPosition();
-		dragDropOperation->initialCanvasPanel = canvasPanelSlot->Parent;
+		dragDropOperation->initialPanel = canvasPanelSlot->Parent;
 	}
 	//FVector2D LocalMousePosition = InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
 	OutOperation = dragDropOperation;
@@ -58,7 +58,7 @@ void UInventoryItemInfoDraggablePanel::NativeOnDragCancelled(const FDragDropEven
 {
 	Super::NativeOnDragCancelled(InDragDropEvent, InOperation);
 	if (UInventoryDragDropOperation* dragDropOperation{ Cast<UInventoryDragDropOperation>(InOperation) }) {
-		if (UCanvasPanel* canvasPanel{ Cast<UCanvasPanel>(dragDropOperation->initialCanvasPanel) }) {
+		if (UCanvasPanel* canvasPanel{ Cast<UCanvasPanel>(dragDropOperation->initialPanel) }) {
 			UCanvasPanelSlot* canvasSlot{ canvasPanel->AddChildToCanvas(this) };
 			canvasSlot->SetPosition(dragDropOperation->initialPosition);
 			canvasSlot->SetAutoSize(true);

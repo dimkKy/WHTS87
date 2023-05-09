@@ -5,12 +5,18 @@
 #include "UI/HUDManager.h"
 #include "Player/PlayerCharacter.h"
 #include "UI/Gametime/InteractionHelper.h"
+#include "UI/HUDManager.h"
+//#include <CoreSystems/WHTS87UserSettings.h>
 
 void AWHTS87PlayerController::OnToggleInventoryMenu()
 {
-	if (GEngine->GameViewport != nullptr && IsValid(GetViewTarget()) && GetViewTarget()->GetClass()->IsChildOf(APlayerCharacter::StaticClass())) {
-		if (AHUDManager * HUD{ Cast<AHUDManager>(MyHUD) }) {
-			HUD->ToggleInventoryMenu();
+	if (GEngine->GameViewport == nullptr) {
+		return;
+	}
+	if (auto veiwTarget{ GetViewTarget() }) {
+		if (veiwTarget->GetClass()->IsChildOf(APlayerCharacter::StaticClass())) {
+			check(false);
+			//GetHUDManager()->ToggleInventoryMenu();
 		}
 	}
 }
@@ -23,6 +29,11 @@ void AWHTS87PlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 	InputComponent->BindAction("ToggleInventoryMenu", IE_Pressed, this, &AWHTS87PlayerController::OnToggleInventoryMenu);
+}
+
+AHUDManager* AWHTS87PlayerController::GetHUDManager() const
+{
+	return CastChecked<AHUDManager>(MyHUD);
 }
 
 void AWHTS87PlayerController::SetViewTarget(AActor* NewViewTarget, FViewTargetTransitionParams TransitionParams)
@@ -55,22 +66,22 @@ UInteractionHelper* AWHTS87PlayerController::GetInteractionHelper()
 void AWHTS87PlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+	/*if (CastChecked<UWHTS87UserSettings>(GEngine->GetGameUserSettings())->showStartupMenu) {
+		GetHUDManager().
+	}*/
+
 }
 
 void AWHTS87PlayerController::AcknowledgePossession(APawn* P)
 {
 	Super::AcknowledgePossession(P);
 	check(P->GetClass()->IsChildOf(APlayerCharacter::StaticClass()));
-	if (AHUDManager* HUD{ Cast<AHUDManager>(MyHUD) }) {
-		HUD->OnPawnPossession();
-	}
+	GetHUDManager()->OnPawnPossession();
 }
 
 void AWHTS87PlayerController::OnUnPossess()
 {
-	if (AHUDManager* HUD{ Cast<AHUDManager>(MyHUD) }) {
-		HUD->OnPawnUnPossess();
-	}
+	GetHUDManager()->OnPawnUnPossess();
 	Super::OnUnPossess();
 }
 

@@ -24,7 +24,7 @@ protected:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 		UBorder* border;
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-		UImage* discardingItemThubnail;
+		UImage* itemThumbnail;
 
 	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
 	virtual void NativeOnDragEnter(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;

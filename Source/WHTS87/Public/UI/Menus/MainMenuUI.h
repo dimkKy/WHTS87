@@ -49,13 +49,13 @@ protected:
 		USettingsSubmenu* settingsSubmenu;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-		UButton* newGameMenuButton;
+		UButton* newGameButton;
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-		UButton* loadGameMenuButton;
+		UButton* loadGameButton;
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-		UButton* settingsMenuButton;
+		UButton* settingsButton;
 
-	void SetCurrentSubmenu(UUserWidget* newSubmenu);
+	void SetCurrentSubmenu(UUserWidget& newSubmenu);
 	UFUNCTION()
 		void ToggleNewGameSubmenu();
 	UFUNCTION()

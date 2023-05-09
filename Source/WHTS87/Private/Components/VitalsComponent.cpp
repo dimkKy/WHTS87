@@ -12,7 +12,7 @@ UVitalsComponent::UVitalsComponent() : maxHPBase{ 100.f }, HPRegenPerSecond{0.5f
 #if WITH_EDITOR
 EDataValidationResult UVitalsComponent::IsDataValid(TArray<FText>& ValidationErrors)
 {
-	EDataValidationResult superResult{ Super::IsDataValid(ValidationErrors) };
+	Super::IsDataValid(ValidationErrors);
 	/*if (superResult != EDataValidationResult::Invalid) {
 		if ())
 			ValidationErrors.Add(FText::FromString());
@@ -20,7 +20,8 @@ EDataValidationResult UVitalsComponent::IsDataValid(TArray<FText>& ValidationErr
 			superResult = EDataValidationResult::Invalid;
 		}
 	}*/
-	return superResult;
+	return ValidationErrors.Num() > 0 ?
+		EDataValidationResult::Invalid : EDataValidationResult::Valid;
 }
 #endif
 void UVitalsComponent::BeginPlay()

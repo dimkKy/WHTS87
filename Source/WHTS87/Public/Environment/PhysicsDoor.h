@@ -53,7 +53,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 		UStaticMeshComponent* door;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-		UPhysicsConstraintComponent* physicsConstraint;
+		UPhysicsConstraintComponent* constraint;
 
 #if WITH_EDITOR
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
@@ -68,6 +68,7 @@ protected:
 	bool bUnknownState;
 	bool bIsClosed;
 	bool bIsPendingClose;
+
 	constexpr static float maxOpenHalfAngle = 46.f;
 	constexpr static float physicsConstraintStrength = 5.f;
 	constexpr static float physicsConstraintDamping = 10.f;

@@ -8,6 +8,7 @@
 
 class UInventoryComponent;
 class UPickupItemInfoBase;
+struct FItemPropertiesBase;
 
 enum class EContainerState : uint8
 {
@@ -22,6 +23,7 @@ enum class EContainerState : uint8
 	/***/
 	HeldHidden,
 };
+
 /**
  * 
  */
@@ -66,6 +68,10 @@ public:
 
 	//TODO
 	UE_NODISCARD bool RemoveFromInventory(bool bEject);
+
+
+	TUniquePtr<FItemPropertiesBase> properties;
+	//TSharedPtr<FItemPropertiesBase> properties;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

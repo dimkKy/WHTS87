@@ -17,6 +17,12 @@ class WHTS87_API UStartupMenu : public UUserWidget
 public:
 	virtual void NativeOnInitialized() override;
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-		UButton* continueButton;
-//protected:
+		UButton* backButton;
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+		UButton* saveExitButton;
+protected:
+	//UFUNCTION()
+	//void OnBackButtonPressed();
+	UFUNCTION()
+		void OnSaveExitButtonPressed();
 };

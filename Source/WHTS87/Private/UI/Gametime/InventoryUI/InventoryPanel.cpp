@@ -61,16 +61,13 @@ void UInventoryPanel::SetNewInventory(UInventoryComponent* newInventory)
 #if WITH_EDITOR
 EDataValidationResult UInventoryPanel::IsDataValid(TArray<FText>& ValidationErrors)
 {
-	EDataValidationResult superResult{ Super::IsDataValid(ValidationErrors) };
-	if (superResult == EDataValidationResult::Invalid) {
-		return superResult;
-	}
+	Super::IsDataValid(ValidationErrors) ;
+
 	if (slotCanvas->Slot->Parent != scrollBox)
 		ValidationErrors.Add(FText::FromString("slotCanvas is supposed to be inside scrollBox"));
-	if (ValidationErrors.Num() > 0) {
-		superResult = EDataValidationResult::Invalid;
-	}
-	return superResult;
+
+	return ValidationErrors.Num() > 0 ?
+		EDataValidationResult::Invalid : EDataValidationResult::Valid;
 }
 #endif
 
@@ -101,7 +98,7 @@ bool UInventoryPanel::NativeOnDrop(const FGeometry& InGeometry, const FDragDropE
 			UpdateAllSlots();
 			if (containter->GetOwnerInventory() != representedInventory && containter->GetItemsCount() > 1) {
 				if (UCanvasPanelSlot * canvasSlot{ Cast<UCanvasPanelSlot>(
-					operation->initialCanvasPanel->AddChild(draggedSlot)) }) {
+					operation->initialPanel->AddChild(draggedSlot)) }) {
 					canvasSlot->SetPosition(operation->initialPosition);
 				}
 			}

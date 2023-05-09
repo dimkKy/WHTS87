@@ -9,7 +9,7 @@
 {
 	if (IsValid(canvasPanelSlot)) {
 		initialPosition = canvasPanelSlot->GetPosition();
-		initialCanvasPanel = CastChecked<UCanvasPanel>(canvasPanelSlot->Parent);
+		initialPanel = CastChecked<UCanvasPanel>(canvasPanelSlot->Parent);
 		return true;
 	}
 	else
@@ -20,7 +20,7 @@ bool UInventoryDragDropOperation::SaveWidgetPosition(FVector2D& slotPosition, UC
 {
 	if (IsValid(canvasPanel)) {
 		initialPosition = slotPosition;
-		initialCanvasPanel = canvasPanel;
+		initialPanel = canvasPanel;
 		return true;
 	}
 	else
@@ -30,9 +30,9 @@ bool UInventoryDragDropOperation::SaveWidgetPosition(FVector2D& slotPosition, UC
 UCanvasPanel* UInventoryDragDropOperation::GetWidgetInitialPosition(FVector2D& outLocalPosition)
 {
 	outLocalPosition = initialPosition;
-	return initialCanvasPanel;
+	return initialPanel;
 }*/
 
-UInventoryDragDropOperation::UInventoryDragDropOperation() : initialCanvasPanel{nullptr}
+UInventoryDragDropOperation::UInventoryDragDropOperation() : initialPanel{nullptr}
 {
 }

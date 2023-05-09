@@ -65,7 +65,7 @@ bool APickupItemContainer::InitializeWithItem(const UPickupItemInfoBase& newItem
 	else {
 		itemCount = 1;
 	}
-	if (newItemInfo.ConstructContainerMesh(*this)) {
+	if (newItemInfo.ConstructContainer(*this)) {
 		itemInfo = &newItemInfo;
 		return true;
 	}
@@ -269,14 +269,11 @@ void APickupItemContainer::PostEditChangeProperty(FPropertyChangedEvent& Propert
 
 EDataValidationResult APickupItemContainer::IsDataValid(TArray<FText>& ValidationErrors)
 {
-	EDataValidationResult superResult{ Super::IsDataValid(ValidationErrors) };
-	if (superResult != EDataValidationResult::Invalid) {
-		if (!IsValid(itemInfo))
-			ValidationErrors.Add(FText::FromString("Invalid itemInfo"));
-		if (ValidationErrors.Num() > 0) {
-			superResult = EDataValidationResult::Invalid;
-		}
-	}
-	return superResult;
+	Super::IsDataValid(ValidationErrors) ;
+	if (!IsValid(itemInfo))
+		ValidationErrors.Add(FText::FromString("Invalid itemInfo"));
+
+	return ValidationErrors.Num() > 0 ?
+		EDataValidationResult::Invalid : EDataValidationResult::Valid;
 }
 #endif

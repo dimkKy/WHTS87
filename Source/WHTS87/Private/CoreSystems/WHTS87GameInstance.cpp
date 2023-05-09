@@ -34,14 +34,17 @@ void UWHTS87GameInstance::OnWorldChanged(UWorld* OldWorld, UWorld* NewWorld)
 #if WITH_EDITOR
 EDataValidationResult UWHTS87GameInstance::IsDataValid(TArray<FText>& ValidationErrors)
 {
-	EDataValidationResult superResult{ Super::IsDataValid(ValidationErrors) };
-	if (superResult != EDataValidationResult::Invalid) {
-		if (!IsValid(StaiwellManagerClass))
-			ValidationErrors.Add(FText::FromString("Invalid StaiwellManagerClass"));
-		if (ValidationErrors.Num() > 0) {
-			superResult = EDataValidationResult::Invalid;
-		}
+	Super::IsDataValid(ValidationErrors);
+	//
+	if (!IsValid(StaiwellManagerClass)) {
+		ValidationErrors.Add(FText::FromString("Invalid StaiwellManagerClass"));
 	}
-	return superResult;
+	//
+	if (ValidationErrors.Num() > 0) {
+		return EDataValidationResult::Invalid;
+	}
+	else {
+		return EDataValidationResult::Valid;
+	}
 }
 #endif

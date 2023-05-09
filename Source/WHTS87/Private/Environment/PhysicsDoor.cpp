@@ -10,7 +10,7 @@ const FRotator APhysicsDoor::closeConstraitPosition = { 0.f, maxOpenHalfAngle * 
 
 APhysicsDoor::APhysicsDoor() : doorFrame{ CreateDefaultSubobject<UStaticMeshComponent>("doorFrame") },
 	door{ CreateDefaultSubobject<UStaticMeshComponent>("door") },
-	physicsConstraint{ CreateDefaultSubobject<UPhysicsConstraintComponent>("constraint") },
+	constraint{ CreateDefaultSubobject<UPhysicsConstraintComponent>("constraint") },
 	lockState { EDoorlockState::ClosedLock }, bUnknownState{ true }, bIsClosed{ true }, bIsPendingClose{ false }
 {
 	SetActorTickInterval(1.f);
@@ -28,15 +28,15 @@ APhysicsDoor::APhysicsDoor() : doorFrame{ CreateDefaultSubobject<UStaticMeshComp
 	door->SetAngularDamping(physicsConstraintDamping);
 	door->SetGenerateOverlapEvents(false);
 
-	physicsConstraint->SetAngularSwing1Limit(EAngularConstraintMotion::ACM_Limited, maxOpenHalfAngle);
-	physicsConstraint->SetAngularSwing2Limit(EAngularConstraintMotion::ACM_Locked, 0.f);
-	physicsConstraint->SetAngularTwistLimit(EAngularConstraintMotion::ACM_Locked, 0.f);
-	physicsConstraint->SetAngularDriveMode(EAngularDriveMode::TwistAndSwing);
+	constraint->SetAngularSwing1Limit(EAngularConstraintMotion::ACM_Limited, maxOpenHalfAngle);
+	constraint->SetAngularSwing2Limit(EAngularConstraintMotion::ACM_Locked, 0.f);
+	constraint->SetAngularTwistLimit(EAngularConstraintMotion::ACM_Locked, 0.f);
+	constraint->SetAngularDriveMode(EAngularDriveMode::TwistAndSwing);
 	//component 2 is parent one
-	physicsConstraint->ComponentName1.ComponentName = doorFrame->GetFName();
-	physicsConstraint->ComponentName2.ComponentName = door->GetFName();
-	physicsConstraint->SetDisableCollision(true);
-	physicsConstraint->ConstraintInstance.SetAngularDriveParams(door->BodyInstance.StabilizationThresholdMultiplier + 0.1f, physicsConstraintDamping, 0.f);
+	constraint->ComponentName1.ComponentName = doorFrame->GetFName();
+	constraint->ComponentName2.ComponentName = door->GetFName();
+	constraint->SetDisableCollision(true);
+	constraint->ConstraintInstance.SetAngularDriveParams(door->BodyInstance.StabilizationThresholdMultiplier + 0.1f, physicsConstraintDamping, 0.f);
 }
 
 void APhysicsDoor::OnConstruction(const FTransform& Transform)
@@ -48,9 +48,9 @@ void APhysicsDoor::OnConstruction(const FTransform& Transform)
 		doorFrame->SetStaticMesh(doorFrameMesh);
 #endif
 
-	physicsConstraint->AttachToComponent(doorFrame, FAttachmentTransformRules::SnapToTargetNotIncludingScale, "DoorSocket");
+	constraint->AttachToComponent(doorFrame, FAttachmentTransformRules::SnapToTargetNotIncludingScale, "DoorSocket");
 	door->SetRelativeRotation({ 0.f, maxOpenHalfAngle, 0.f });
-	door->AttachToComponent(physicsConstraint, FAttachmentTransformRules::KeepRelativeTransform);
+	door->AttachToComponent(constraint, FAttachmentTransformRules::KeepRelativeTransform);
 	Super::OnConstruction(Transform);
 }
 
@@ -74,7 +74,7 @@ bool APhysicsDoor::SetMeshes(UStaticMesh* newDoorFrameMesh, UStaticMesh* newDoor
 void APhysicsDoor::BeginPlay()
 {
 	door->OnComponentSleep.AddDynamic(this, &APhysicsDoor::OnDoorPutToSleep);
-	physicsConstraint->SetAngularOrientationTarget(closeConstraitPosition);
+	constraint->SetAngularOrientationTarget(closeConstraitPosition);
 	door->SetSimulatePhysics(false);
 	door->SetWorldRotation(doorFrame->GetComponentRotation());
 	bIsClosed = true;
@@ -99,7 +99,7 @@ UE_NODISCARD bool APhysicsDoor::OnLongInteraction(AActor* Caller)
 
 void APhysicsDoor::InstantClose()
 {
-	physicsConstraint->SetAngularOrientationTarget(closeConstraitPosition);
+	constraint->SetAngularOrientationTarget(closeConstraitPosition);
 	door->SetSimulatePhysics(false);
 	door->SetWorldRotation(doorFrame->GetComponentRotation());
 	bIsClosed = true;
@@ -150,11 +150,11 @@ void APhysicsDoor::PushDoor()
 			door->SetSimulatePhysics(true);
 		if (bIsPendingClose) {
 			door->AddAngularImpulseInRadians({ 0.f, 0.f, doorPushingImpulse * -1.f }, NAME_None, true);
-			physicsConstraint->SetAngularOrientationTarget(closeConstraitPosition);
+			constraint->SetAngularOrientationTarget(closeConstraitPosition);
 		}
 		else {
 			door->AddAngularImpulseInRadians({ 0.f, 0.f, doorPushingImpulse }, NAME_None, true);
-			physicsConstraint->SetAngularOrientationTarget(openConstraitPosition);
+			constraint->SetAngularOrientationTarget(openConstraitPosition);
 		}
 	}
 }

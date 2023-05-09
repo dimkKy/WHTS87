@@ -6,7 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "WHTS87PlayerController.generated.h"
 
-//class AHUDManager;
+class AHUDManager;
 class UInteractionHelper;
 
 /**
@@ -21,6 +21,7 @@ public:
 	//void OnToggleJournalMenu();
 	//void OnTogglePauseMenu();
 	virtual void SetupInputComponent() override;
+	FORCEINLINE UE_NODISCARD AHUDManager* GetHUDManager() const;
 	//AHUDManager* GetHUDManager() const;
 	virtual void SetViewTarget(class AActor* NewViewTarget, FViewTargetTransitionParams TransitionParams = FViewTargetTransitionParams()) override;
 	UInteractionHelper* GetInteractionHelper();
