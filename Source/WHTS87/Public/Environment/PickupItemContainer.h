@@ -36,7 +36,7 @@ public:
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void Tick(float DeltaTime) override;
 
-	virtual bool IsCurrentlyInteractable(AActor* caller) const override 
+	virtual bool IsCurrentlyInteractable(const AActor* caller) const override 
 		{ return bAcceptInteraction; };
 
 	UStaticMeshComponent* GetBody() const

@@ -16,14 +16,19 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void OnConstruction(const FTransform& Transform) override;
 	//virtual void FinishSpawning(const FTransform& Transform, bool bIsDefaultTransform = false, const FComponentInstanceDataCache* InstanceDataCache = nullptr);
-	UStaticMeshComponent* AddJoint(UStaticMesh* meshToAssign, const FName& socketName, USceneComponent* componentAttachTo);
+	UStaticMeshComponent* AddJoint(UStaticMesh& mesh, const FName& socketName, USceneComponent& parent);
 
 protected:
 	virtual void BeginPlay() override;
-	//bool GenerateEntranceLadder(UStaticMesh* meshToAssign);
-	//UStaticMeshComponent* TryGetNextStairwellSpawnPoint(bool bTryFindNewAnyway, FName* socketNameToSearch = nullptr);
+	bool GenerateEntranceLadder(UStaticMesh& mesh);
+
+	FTransform GetNextSWSpawnPoint() const;
+
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
 		UStaticMeshComponent* mainFloor;
+	void SetExitComponent(UStaticMeshComponent& comp);
 
-	//friend class UStairwellManager;
+	UStaticMeshComponent* exitComponent;
+
+	friend class UStairwellManager;
 };

@@ -27,8 +27,10 @@ public:
 	UVitalsComponent();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void ApplyPhysicalDamage(float amount, float duration);
-	float GetMaxHP() const { return maxHPBase; };
-	float GetCurrentHP() const { return currentHP; };
+	float GetMaxHP() const 
+		{ return maxHPBase; };
+	float GetCurrentHP() const 
+		{ return currentHP; };
 
 #if WITH_EDITOR
 	virtual EDataValidationResult IsDataValid(TArray<FText>& ValidationErrors) override;
@@ -44,5 +46,6 @@ protected:
 		float HPRegenPerSecond;
 	float currentHP;
 	TDoubleLinkedList<FPointsModifier> healthModifiersQueue;
+	//TDoubleLinkedList<FVector2D> healthModifiersQueue;
 
 };

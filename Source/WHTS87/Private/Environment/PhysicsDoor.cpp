@@ -4,6 +4,7 @@
 #include "Environment/PhysicsDoor.h"
 #include "Components/StaticMeshComponent.h"
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
+#include "WHTS87Utils.h"
 
 const FRotator APhysicsDoor::openConstraitPosition = { 0.f, maxOpenHalfAngle * 2.f, 0.f };
 const FRotator APhysicsDoor::closeConstraitPosition = { 0.f, maxOpenHalfAngle * -2.f, 0.f };
@@ -11,7 +12,8 @@ const FRotator APhysicsDoor::closeConstraitPosition = { 0.f, maxOpenHalfAngle * 
 APhysicsDoor::APhysicsDoor() : doorFrame{ CreateDefaultSubobject<UStaticMeshComponent>("doorFrame") },
 	door{ CreateDefaultSubobject<UStaticMeshComponent>("door") },
 	constraint{ CreateDefaultSubobject<UPhysicsConstraintComponent>("constraint") },
-	lockState { EDoorlockState::ClosedLock }, bUnknownState{ true }, bIsClosed{ true }, bIsPendingClose{ false }
+	lockState { EDoorlockState::ClosedLock }, bUnknownState{ true }, bIsClosed{ true }, 
+	bIsPendingClose{ false }
 {
 	SetActorTickInterval(1.f);
 
@@ -36,7 +38,8 @@ APhysicsDoor::APhysicsDoor() : doorFrame{ CreateDefaultSubobject<UStaticMeshComp
 	constraint->ComponentName1.ComponentName = doorFrame->GetFName();
 	constraint->ComponentName2.ComponentName = door->GetFName();
 	constraint->SetDisableCollision(true);
-	constraint->ConstraintInstance.SetAngularDriveParams(door->BodyInstance.StabilizationThresholdMultiplier + 0.1f, physicsConstraintDamping, 0.f);
+	constraint->ConstraintInstance.SetAngularDriveParams(
+		door->BodyInstance.StabilizationThresholdMultiplier + 0.1f, physicsConstraintDamping, 0.f);
 }
 
 void APhysicsDoor::OnConstruction(const FTransform& Transform)
@@ -60,15 +63,17 @@ void APhysicsDoor::Tick(float DeltaTime)
 	//TODO
 }
 
-bool APhysicsDoor::SetMeshes(UStaticMesh* newDoorFrameMesh, UStaticMesh* newDoorMesh)
+bool APhysicsDoor::SetMeshes(UStaticMesh& newDoorFrameMesh, UStaticMesh& newDoorMesh)
 {
-	if (newDoorFrameMesh->FindSocket("DoorSocket") != NULL && !IsValid(doorFrame->GetStaticMesh()) && !IsValid(door->GetStaticMesh())) {
-		doorFrame->SetStaticMesh(newDoorFrameMesh);
-		door->SetStaticMesh(newDoorMesh);
-		return true;
+	check(newDoorFrameMesh.FindSocket(WHTS87Utils::GetNumberedName(WHTS87Utils::NamingRules::doorSocket)) != NULL);
+	
+	if (!doorFrame->GetStaticMesh() || !door->GetStaticMesh()) {
+		return doorFrame->SetStaticMesh(&newDoorFrameMesh) && 
+			door->SetStaticMesh(&newDoorMesh);
 	}
-	else
+	else {
 		return false;
+	}
 }
 
 void APhysicsDoor::BeginPlay()
@@ -83,8 +88,9 @@ void APhysicsDoor::BeginPlay()
 UE_NODISCARD bool APhysicsDoor::OnInstantInteraction(AActor* Caller)
 {
 	//TODO
-	if (bIsClosed)
+	if (bIsClosed) {
 		OpenDoor();
+	}	
 	else {
 		bIsPendingClose = !bIsPendingClose;
 		PushDoor();
@@ -108,8 +114,12 @@ void APhysicsDoor::InstantClose()
 void APhysicsDoor::OnDoorPutToSleep(UPrimitiveComponent* InComp, FName InBoneName)
 {
 	check(InComp == (UPrimitiveComponent*)door);
+
+	if (!bIsPendingClose) {
+		return;
+	}
 	//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, FString::Printf(TEXT("OnDoorPutToSleep fired")));
-	if (bIsPendingClose && door->GetComponentRotation().Equals(doorFrame->GetComponentRotation(), 1.5f)) {
+	if (door->GetComponentRotation().Equals(doorFrame->GetComponentRotation(), closePosTolerance)) {
 		bIsClosed = true;
 		//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, FString::Printf(TEXT("Closed")));
 		InComp->SetSimulatePhysics(false);

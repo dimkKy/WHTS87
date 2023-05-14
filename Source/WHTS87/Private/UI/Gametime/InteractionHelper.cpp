@@ -5,7 +5,7 @@
 #include "Environment/InteractableActor.h"
 
 UInteractionHelper::UInteractionHelper(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer), 
-	timeSinceButtonPressed{ 0.f }, actorCurrentlyInteractingWith{ nullptr }
+	timeSinceButtonPressed{ 0.f }, actorInteractingWith{ nullptr }
 {
 }
 

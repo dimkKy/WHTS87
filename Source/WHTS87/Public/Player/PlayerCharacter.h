@@ -28,15 +28,19 @@ public:
 	/// <param name="norm">will be clamped between -1 and 1</param>
 	/// <param name="TransformSpace">relative to actor/camera/springarm/world as follows</param>
 	/// <returns></returns>
-	FVector DeprojectCameraScreenPlane(const FVector2D& normCord, ERelativeTransformSpace transformSpace = RTS_Component);
+	FVector DeprojectCameraScreenPlane(const FVector2D& normCord, ERelativeTransformSpace transformSpace = RTS_Component) const;
 	//FVector DeprojectCameraScreenPlane(float angleX, float normY, ERelativeTransformSpace transformSpace = RTS_Component);
-	USceneComponent* GetEquipmentAttachParent();
+	USceneComponent* GetEquipmentAttachParent() const;
 	//todo
 	void StopInteracting();
+
+	bool VerifyInteraction(const AInteractableActor& other) const;
 
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	AActor* CameraForwardLineTrace(ECollisionChannel channel);
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 		UCameraComponent* firstPersonCamera;
@@ -70,12 +74,17 @@ protected:
 	AActor* actorInFocus;
 
 	UPROPERTY(DuplicateTransient)
-		AInteractableActor* actorCurrentlyInteractingWith;
+		AInteractableActor* actorInteractingWith;
 	//negative value means interaction is instant
-	float timeSinceLongInteractionStarted;
+	float timeSinceLongInteractionStart;
 
 	//TWeakObjectPtr<UInteractionHelper> interactionHelper;
 	//UInteractionHelper* interactionHelper;
 
 	FHitResult interactionShotResult;
+
+	constexpr static float capsuleRadius = 34.f;
+	constexpr static float capsuleHalfHeight = 87.f;
+	const static FVector cameraRelativeLocation;
+	constexpr static float cameraRotationLagSpeed = 50.f;
 };

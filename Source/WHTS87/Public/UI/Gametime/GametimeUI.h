@@ -44,7 +44,7 @@ public:
 	void SetCurrentMenu(EGametimeMenu newMenu);
 	UInteractionHelper* GetInteractionHelper();
 protected:
-	void SetCurrentMenu(UWidget* newMenu);
+	void SetCurrentMenu(UWidget& newMenu);
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 		UCanvasPanel* persistentCanvas;

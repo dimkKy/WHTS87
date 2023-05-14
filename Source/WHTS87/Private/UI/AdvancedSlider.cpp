@@ -25,8 +25,8 @@ void UAdvancedSlider::NativeOnInitialized()
 	
 	increaseButton->SetClickMethod(EButtonClickMethod::PreciseClick);
 	increaseButton->OnClicked.AddDynamic(this, &UAdvancedSlider::OnIncreaseButtonPressed);
-	decreaseButton->SetClickMethod(EButtonClickMethod::PreciseClick);
 
+	decreaseButton->SetClickMethod(EButtonClickMethod::PreciseClick);
 	decreaseButton->OnClicked.AddDynamic(this, &UAdvancedSlider::OnDecreaseButtonPressed);
 
 	FVector2D sliderTextSize{ FSlateApplication::Get().GetRenderer()->

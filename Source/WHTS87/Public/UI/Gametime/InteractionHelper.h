@@ -26,5 +26,5 @@ protected:
 
 	float timeSinceButtonPressed;
 	UPROPERTY()
-		AInteractableActor* actorCurrentlyInteractingWith;
+		AInteractableActor* actorInteractingWith;
 };

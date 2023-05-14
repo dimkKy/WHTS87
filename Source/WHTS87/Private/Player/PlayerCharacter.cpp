@@ -12,20 +12,24 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "WHTS87Utils.h"
 
-APlayerCharacter::APlayerCharacter() : firstPersonCamera{ CreateDefaultSubobject<UCameraComponent>("firstPersonCamera") },
+const FVector APlayerCharacter::cameraRelativeLocation{ -15.f, 0.f, 70.f };
+
+APlayerCharacter::APlayerCharacter() : 
+	firstPersonCamera{ CreateDefaultSubobject<UCameraComponent>("firstPersonCamera") },
 	cameraSpringArm{ CreateDefaultSubobject<USpringArmComponent>("cameraSpringArm") },
 	inventory{ CreateDefaultSubobject<UPlayerInventoryComponent>("inventory") },
 	vitals{ CreateDefaultSubobject<UPlayerVitalsComponent>("vitals") },
 	baseTurnRate{ 45.f }, baseLookUpRate{ 45.f }, maxInteractionDistance{ 450.f },
-	actorInFocus{ nullptr }, actorCurrentlyInteractingWith{ nullptr }
+	actorInFocus{ nullptr }, actorInteractingWith{ nullptr }
 {
 	PrimaryActorTick.bCanEverTick = true;
 	SetActorTickInterval(0.25f);
-	GetCapsuleComponent()->InitCapsuleSize(34.f, 87.0f);
+	GetCapsuleComponent()->InitCapsuleSize(capsuleRadius, capsuleHalfHeight);
 
 	firstPersonCamera->SetupAttachment(GetCapsuleComponent());
-	firstPersonCamera->SetRelativeLocation(FVector(-15.f, 0.f, 70.f));
+	firstPersonCamera->SetRelativeLocation(cameraRelativeLocation);
 	firstPersonCamera->bUsePawnControlRotation = true;
 
 	cameraSpringArm->SetupAttachment(firstPersonCamera);
@@ -33,21 +37,13 @@ APlayerCharacter::APlayerCharacter() : firstPersonCamera{ CreateDefaultSubobject
 	cameraSpringArm->bDoCollisionTest = false;
 	cameraSpringArm->bUsePawnControlRotation = false;
 	cameraSpringArm->bEnableCameraRotationLag = true;
-	cameraSpringArm->CameraRotationLagSpeed = 50.f;
+	cameraSpringArm->CameraRotationLagSpeed = cameraRotationLagSpeed;
 }
 
-FVector APlayerCharacter::DeprojectCameraScreenPlane(const FVector2D& _normCord, ERelativeTransformSpace transformSpace)
+FVector APlayerCharacter::DeprojectCameraScreenPlane(const FVector2D& _normCord, ERelativeTransformSpace transformSpace) const
 {
 	FVector2D normCoord{ _normCord.ClampAxes(-1.f, 1.f) };
-	float nearClipDist{ firstPersonCamera->OrthoNearClipPlane };
-	if (FMath::IsNearlyZero(nearClipDist) || nearClipDist < 0.f) {
-		if (IsValid(GEngine)) {
-			nearClipDist = GEngine->NearClipPlane;
-		}
-		else {
-			nearClipDist = 10.f; //default value used by GEngine
-		}	
-	}
+	float nearClipDist{ WHTS87Utils::GetCameraNearPlane(*firstPersonCamera) };
 	FVector2D halvedPlaneSize{ nearClipDist * FMath::Tan(firstPersonCamera->FieldOfView * 0.5f) };
 	halvedPlaneSize.X = halvedPlaneSize.Y * firstPersonCamera->AspectRatio;
 	/*FVector2D halvedPlaneSize;
@@ -107,7 +103,7 @@ FVector APlayerCharacter::DeprojectCameraScreenPlane(const FVector2D& _normCord,
 	}
 }
 
-USceneComponent* APlayerCharacter::GetEquipmentAttachParent()
+USceneComponent* APlayerCharacter::GetEquipmentAttachParent() const
 {
 	return static_cast<USceneComponent*>(cameraSpringArm);
 }
@@ -124,14 +120,14 @@ void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	//handle interaction
-	if (actorCurrentlyInteractingWith) {
+	if (actorInteractingWith) {
 		//negative means button was just pressed
-		if (timeSinceLongInteractionStarted > 0.f) {
+		if (timeSinceLongInteractionStart > 0.f) {
 			//long interaction is currently in proccess, checks are inside OnInteracting()
-			timeSinceLongInteractionStarted += DeltaTime;
-			if (actorCurrentlyInteractingWith->GetLongInteractionTime() < timeSinceLongInteractionStarted) {
+			timeSinceLongInteractionStart += DeltaTime;
+			if (actorInteractingWith->GetLongInteractionTime() < timeSinceLongInteractionStart) {
 				//finish long interaction
-				if (actorCurrentlyInteractingWith->OnInteract(this, false)) {
+				if (actorInteractingWith->OnInteract(this, false)) {
 					//long interaction successfull
 				}
 				else {
@@ -142,15 +138,13 @@ void APlayerCharacter::Tick(float DeltaTime)
 		}
 	}
 	else {
-		if (GetWorld()->LineTraceSingleByChannel(interactionShotResult, firstPersonCamera->GetComponentLocation(),
-			(firstPersonCamera->GetForwardVector() * maxInteractionDistance) + firstPersonCamera->GetComponentLocation(),
-			ECC_Visibility, FCollisionQueryParams::DefaultQueryParam, FCollisionResponseParams::DefaultResponseParam)) {
-			if (AInteractableActor * interactableInFocus{ Cast<AInteractableActor>(interactionShotResult.GetActor()) }) {
-				if (interactableInFocus == actorInFocus) {
+		if (auto* traceResult{ CameraForwardLineTrace(ECC_Visibility) }) {
+			if (traceResult->IsA(AInteractableActor::StaticClass())) {
+				if (traceResult == actorInFocus) {
 					//start showing prompt
 				}
 				else {
-					actorInFocus = interactableInFocus;
+					actorInFocus = traceResult;
 				}
 			}
 		}
@@ -178,6 +172,20 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	PlayerInputComponent->BindAction("Interact", IE_Released, this, &APlayerCharacter::AbortInteraction);
 	//PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &APlayerCharacter::OnReload);
 	//PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &APlayerCharacter::ApplySelfDamage);
+}
+
+AActor* APlayerCharacter::CameraForwardLineTrace(ECollisionChannel channel)
+{
+	check(GetWorld());
+	auto cameraLocation{ firstPersonCamera->GetComponentLocation() };
+	if (GetWorld()->LineTraceSingleByChannel(interactionShotResult, cameraLocation,
+		(firstPersonCamera->GetForwardVector() * maxInteractionDistance) + cameraLocation, channel,
+		FCollisionQueryParams::DefaultQueryParam, FCollisionResponseParams::DefaultResponseParam)) {
+		return interactionShotResult.GetActor();
+	}
+	else {
+		return nullptr;
+	}
 }
 
 void APlayerCharacter::MoveForward(float value)
@@ -210,8 +218,8 @@ void APlayerCharacter::StartInteraction()
 			(firstPersonCamera->GetForwardVector() * maxInteractionDistance) + firstPersonCamera->GetComponentLocation(), 
 			ECC_Visibility, FCollisionQueryParams::DefaultQueryParam, FCollisionResponseParams::DefaultResponseParam)) {
 		if (AInteractableActor* interactableInFocus{ Cast<AInteractableActor>(interactionShotResult.GetActor()) }) {
-			actorCurrentlyInteractingWith = interactableInFocus;
-			timeSinceLongInteractionStarted = -1.f;
+			actorInteractingWith = interactableInFocus;
+			timeSinceLongInteractionStart = -1.f;
 			SetActorTickInterval(0.f);
 			/*/ugly
 			APlayerController* playerController{ CastChecked<APlayerController>(Controller) };
@@ -227,7 +235,7 @@ void APlayerCharacter::StartInteraction()
 
 			UInteractionHelper* helper{ CastChecked<AWHTS87PlayerController>(Controller)->GetInteractionHelper() };
 			if (helper != nullptr && interactableInFocus->IsCurrentlyInteractable(this)) {
-				actorCurrentlyInteractingWith = interactableInFocus;
+				actorInteractingWith = interactableInFocus;
 				//helper
 				//CastChecked<AWHTS87PlayerController>(Controller)->MyHUD;
 				//CastChecked<AWHTS87PlayerController>(Controller)->SetInputMode
@@ -240,16 +248,15 @@ void APlayerCharacter::StartInteraction()
 void APlayerCharacter::OnInteracting()
 {
 	//track location
-	check(actorCurrentlyInteractingWith != nullptr);
-	if (actorCurrentlyInteractingWith->GetLongInteractionTime() == 0.f)
+	check(actorInteractingWith);
+	if (actorInteractingWith->GetLongInteractionTime() == 0.f) {
 		return;
-	if (actorCurrentlyInteractingWith->IsCurrentlyInteractable(this) && 
-		FVector::DistSquared(firstPersonCamera->GetComponentLocation(), actorCurrentlyInteractingWith->GetActorLocation())
-		< (maxInteractionDistance + 10.f) * maxInteractionDistance) {
+	}
+	if (VerifyInteraction(*actorInteractingWith)) {
 		//proceed
-		if (timeSinceLongInteractionStarted < 0.f) {
+		if (timeSinceLongInteractionStart < 0.f) {
 			//actually start long interaction
-			timeSinceLongInteractionStarted = 0.25f;
+			timeSinceLongInteractionStart = 0.25f;
 
 		}
 	}
@@ -262,13 +269,11 @@ void APlayerCharacter::OnInteracting()
 void APlayerCharacter::AbortInteraction()
 {
 	//verify we can still interact
-	if (actorCurrentlyInteractingWith->IsCurrentlyInteractable(this) && 
-		FVector::DistSquared(firstPersonCamera->GetComponentLocation(), actorCurrentlyInteractingWith->GetActorLocation())
-		< (maxInteractionDistance + 10.f) * maxInteractionDistance) {
-		if (timeSinceLongInteractionStarted < 0.f) {
+	if (VerifyInteraction(*actorInteractingWith)) {
+		if (timeSinceLongInteractionStart < 0.f) {
 			//instant interaction
-			timeSinceLongInteractionStarted = 0.25f;
-			if (actorCurrentlyInteractingWith->OnInteract(this)) {
+			timeSinceLongInteractionStart = 0.25f;
+			if (actorInteractingWith->OnInteract(this)) {
 				//instant interaction successfull
 			}
 			else {
@@ -282,5 +287,12 @@ void APlayerCharacter::AbortInteraction()
 void APlayerCharacter::StopInteracting()
 {
 	SetActorTickInterval(0.25f);
-	actorCurrentlyInteractingWith = nullptr;
+	actorInteractingWith = nullptr;
+}
+
+bool APlayerCharacter::VerifyInteraction(const AInteractableActor& other) const
+{
+	return other.IsCurrentlyInteractable(this) &&
+		FVector::DistSquared(firstPersonCamera->GetComponentLocation(), other.GetActorLocation())
+		< (maxInteractionDistance + 10.f) * maxInteractionDistance;
 }

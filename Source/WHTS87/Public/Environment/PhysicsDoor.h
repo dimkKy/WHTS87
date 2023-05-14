@@ -31,12 +31,12 @@ public:
 
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void Tick(float DeltaTime) override;
-	bool SetMeshes(UStaticMesh* newDoorFrameMesh, UStaticMesh* newDoorMesh);
+	bool SetMeshes(UStaticMesh& newDoorFrameMesh, UStaticMesh& newDoorMesh);
 
 protected:
 	virtual void BeginPlay() override;
-	UE_NODISCARD virtual bool OnInstantInteraction(AActor* Caller) override;
-	UE_NODISCARD virtual bool OnLongInteraction(AActor* Caller) override;
+	UE_NODISCARD virtual bool OnInstantInteraction(AActor* caller) override;
+	UE_NODISCARD virtual bool OnLongInteraction(AActor* caller) override;
 	void InstantClose();
 	UFUNCTION()
 		void OnDoorPutToSleep(UPrimitiveComponent* InComp, FName InBoneName);
@@ -73,6 +73,7 @@ protected:
 	constexpr static float physicsConstraintStrength = 5.f;
 	constexpr static float physicsConstraintDamping = 10.f;
 	constexpr static float doorPushingImpulse = 15.f;
+	constexpr static float closePosTolerance = 1.f;
 	const static FRotator openConstraitPosition;
 	const static FRotator closeConstraitPosition;
 };

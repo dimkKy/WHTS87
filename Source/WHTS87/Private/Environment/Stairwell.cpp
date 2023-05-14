@@ -3,8 +3,12 @@
 
 #include "Environment/Stairwell.h"
 #include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMeshSocket.h"
+#include "WHTS87Utils.h"
 
-AStairwell::AStairwell() : mainFloor{ CreateDefaultSubobject<UStaticMeshComponent>("mainFloor") }
+AStairwell::AStairwell() : 
+	mainFloor{ CreateDefaultSubobject<UStaticMeshComponent>("mainFloor") },
+	exitComponent{ mainFloor }
 {
 	PrimaryActorTick.bCanEverTick = true;
 	mainFloor->SetMobility(EComponentMobility::Stationary);
@@ -19,6 +23,40 @@ void AStairwell::BeginPlay()
 	
 }
 
+bool AStairwell::GenerateEntranceLadder(UStaticMesh& mesh)
+{
+	verify(RootComponent == mainFloor);
+	auto* newJoint{ CastChecked<UStaticMeshComponent>(AddComponentByClass(
+		UStaticMeshComponent::StaticClass(), true, RootComponent->GetRelativeTransform(), false)) };
+	newJoint->SetMobility(EComponentMobility::Stationary);
+	newJoint->SetGenerateOverlapEvents(false);
+	newJoint->SetCollisionObjectType(ECC_WorldStatic);
+	newJoint->SetStaticMesh(&mesh);
+	SetRootComponent(newJoint);
+	if (mesh.Sockets.Num() >= 1 && mainFloor->AttachToComponent(
+		newJoint, FAttachmentTransformRules::SnapToTargetNotIncludingScale, mesh.Sockets[0]->SocketName)) {
+		//TODO?
+		//jointComponents.Add(newJoint);
+		return true;
+	}
+	else {
+		return false;
+	}
+	return false;
+}
+
+FTransform AStairwell::GetNextSWSpawnPoint() const
+{
+	verify(exitComponent && exitComponent->DoesSocketExist(WHTS87Utils::NamingRules::toNextSWSocket));
+	return exitComponent->GetSocketTransform(WHTS87Utils::NamingRules::toNextSWSocket);
+}
+
+void AStairwell::SetExitComponent(UStaticMeshComponent& comp)
+{
+	check(comp.DoesSocketExist(WHTS87Utils::NamingRules::toNextSWSocket));
+	exitComponent = &comp;
+}
+
 void AStairwell::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -30,21 +68,18 @@ void AStairwell::OnConstruction(const FTransform& Transform)
 	Super::OnConstruction(Transform);
 }
 
-UStaticMeshComponent* AStairwell::AddJoint(UStaticMesh* meshToAssign, const FName& socketName, USceneComponent* componentAttachTo)
+UStaticMeshComponent* AStairwell::AddJoint(UStaticMesh& mesh, const FName& socketName, USceneComponent& parent)
 {
-	if (IsValid(meshToAssign)) {
-		UStaticMeshComponent* newJoint{ CastChecked<UStaticMeshComponent>(AddComponentByClass(UStaticMeshComponent::StaticClass(), true, FTransform(), false)) };
-		newJoint->SetMobility(EComponentMobility::Stationary);
-		newJoint->SetGenerateOverlapEvents(false);
-		newJoint->SetCollisionObjectType(ECC_WorldStatic);
-		newJoint->SetStaticMesh(meshToAssign);
+	auto* newJoint{ CastChecked<UStaticMeshComponent>(
+		AddComponentByClass(UStaticMeshComponent::StaticClass(), true, {}, false)) };
 
-		//should not return false for any return clause except one on line 2131 (last one) in SceneComponent.cpp
-		check(newJoint->AttachToComponent(componentAttachTo, FAttachmentTransformRules::SnapToTargetNotIncludingScale, socketName));
-		return newJoint;
-	}
-	else {
-		return nullptr;
-	}	
+	newJoint->SetMobility(EComponentMobility::Stationary);
+	newJoint->SetGenerateOverlapEvents(false);
+	newJoint->SetCollisionObjectType(ECC_WorldStatic);
+	newJoint->SetStaticMesh(&mesh);
+	newJoint->AttachToComponent(&parent, 
+		FAttachmentTransformRules::SnapToTargetNotIncludingScale, socketName);
+
+	return newJoint;
 }
 

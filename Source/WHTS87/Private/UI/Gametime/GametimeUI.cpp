@@ -8,6 +8,7 @@
 #include "UI/Gametime/InventoryUI/InventoryMenu.h"
 #include "UI/Gametime/JournalMenu.h"
 #include "UI/Gametime/InteractionHelper.h"
+#include "WHTS87Utils.h"
 
 void UGametimeUI::UpdatePlayerHealth(int32 NewHealth)
 {
@@ -16,7 +17,7 @@ void UGametimeUI::UpdatePlayerHealth(int32 NewHealth)
 
 void UGametimeUI::OnPawnPossession()
 {
-	SetCurrentMenu(walktimeCanvas);
+	SetCurrentMenu(*walktimeCanvas);
 	//OnPlayerUIChangedEventHandle = Cast<APlayerCharacter>(GetOwningPlayerPawn())->OnPlayerUIChanged.AddUObject(this, &UGametimeUI::UpdatePlayerHealth);
 	//Cast<APlayerCharacter>(GetOwningPlayerPawn())->OnPlayerUIChanged.add
 	
@@ -37,15 +38,15 @@ void UGametimeUI::SetCurrentMenu(EGametimeMenu newMenu)
 	switch (newMenu)
 	{
 	case EGametimeMenu::Inventory:
-		SetCurrentMenu(inventoryMenu);
+		SetCurrentMenu(*inventoryMenu);
 		break;
 	case EGametimeMenu::Journal:
-		SetCurrentMenu(journalMenu);
+		SetCurrentMenu(*journalMenu);
 		break;
 	case EGametimeMenu::Walktime:
 		[[fallthrough]];
 	default:
-		SetCurrentMenu(walktimeCanvas);
+		SetCurrentMenu(*walktimeCanvas);
 		break;
 	}
 }
@@ -62,10 +63,9 @@ UInteractionHelper* UGametimeUI::GetInteractionHelper()
 	}
 }
 
-void UGametimeUI::SetCurrentMenu(UWidget* newSubmenu)
+void UGametimeUI::SetCurrentMenu(UWidget& newSubmenu)
 {
-	if (newSubmenu) {
-		/*if (newSubmenu == menuSwitcher->GetActiveWidget()) {
+	/*if (newSubmenu == menuSwitcher->GetActiveWidget()) {
 			if (menuSwitcher->GetVisibility() == ESlateVisibility::Visible)
 				menuSwitcher->SetVisibility(ESlateVisibility::Hidden);
 			else
@@ -78,14 +78,13 @@ void UGametimeUI::SetCurrentMenu(UWidget* newSubmenu)
 				menuSwitcher->SetVisibility(ESlateVisibility::Visible);
 			}
 		}*/
-		if (newSubmenu == menuSwitcher->GetActiveWidget()) {
-			menuSwitcher->SetActiveWidget(walktimeCanvas);
-		}
-		else {
-			//Parenting to some abstract submenuWidget does not look like an effective way either
-			if (newSubmenu == journalMenu || newSubmenu == walktimeCanvas) {
-				menuSwitcher->SetActiveWidget(newSubmenu);
-			}
+	if (&newSubmenu == menuSwitcher->GetActiveWidget()) {
+		menuSwitcher->SetActiveWidget(walktimeCanvas);
+	}
+	else {
+		//Parenting to some abstract submenuWidget does not look like an effective way either
+		if (WHTS87Utils::IsIn(newSubmenu, journalMenu, walktimeCanvas)) {
+			menuSwitcher->SetActiveWidget(&newSubmenu);
 		}
 	}
 }

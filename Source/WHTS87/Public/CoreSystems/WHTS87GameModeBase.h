@@ -20,6 +20,10 @@ public:
 	//change name
 	UFUNCTION()
 		void OnGameplayStart();
+
+#if WITH_EDITOR
+	virtual EDataValidationResult IsDataValid(TArray<FText>& ValidationErrors) override;
+#endif
 protected:
 	//UFUNCTION()
 		//void OnGameSpecificSettingsLoad(const FString& slotName, const int32 userIndex, USaveGame* loadedData);

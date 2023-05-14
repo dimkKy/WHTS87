@@ -15,7 +15,7 @@ public:
 
 	UE_NODISCARD virtual bool OnInteract(AActor* caller, bool bIsInstantAction = true) final;
 	//split to long and instant interactions?
-	UE_NODISCARD virtual bool IsCurrentlyInteractable(AActor* caller) const { return true; };
+	UE_NODISCARD virtual bool IsCurrentlyInteractable(const AActor* caller) const { return true; };
 	//virtual float GetLongInteractionTime() const { return longInteractionTime; };
 	virtual float GetLongInteractionTime() const { return 0.f; };
 

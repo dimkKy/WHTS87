@@ -4,6 +4,8 @@
 #include "CoreSystems/WHTS87GameModeBase.h"
 #include "CoreSystems/StairwellManager.h"
 #include "Player/WHTS87PlayerController.h"
+#include "EngineUtils.h"
+#include "CoreSystems/IntroCamera.h"
 #include "Kismet/GameplayStatics.h"
 
 AWHTS87GameModeBase::AWHTS87GameModeBase() :
@@ -59,6 +61,30 @@ void AWHTS87GameModeBase::OnGameplayStart()
 #endif
 	//GetWorld()->GetSubsystem<UStairwellManager>()->OnGameplayStart();
 }
+
+#if WITH_EDITOR
+EDataValidationResult AWHTS87GameModeBase::IsDataValid(TArray<FText>& ValidationErrors)
+{
+	Super::IsDataValid(ValidationErrors);
+
+	if (mainMenuLevel) {
+		int32 introCamerasCount{ 0 };
+		for (TActorIterator<AActor> it{ mainMenuLevel->GetWorld(), AIntroCamera::StaticClass() }; it; ++it)
+		{
+			introCamerasCount++;
+		}
+		if (introCamerasCount != 1) {
+			ValidationErrors.Add(FText::FromString("There should be exactly one intro camera in main level"));
+		}
+	}
+	else {
+		ValidationErrors.Add(FText::FromString("Invalid mainMenuLevel"));
+	}
+
+	return ValidationErrors.Num() > 0 ?
+		EDataValidationResult::Invalid : EDataValidationResult::Valid;
+}
+#endif
 
 void AWHTS87GameModeBase::StartPlay()
 {

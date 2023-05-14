@@ -4,10 +4,11 @@
 #include "Environment/InteractableSwitcherBase.h"
 #include "Components/StaticMeshComponent.h"
 
-AInteractableSwitcherBase::AInteractableSwitcherBase() :switcherFrame{ CreateDefaultSubobject<UStaticMeshComponent>("switcherFrameComponent") },
-switcherBody{ CreateDefaultSubobject<UStaticMeshComponent>("switcherBodyComponent") },
-animationTimeline{ CreateDefaultSubobject<UTimelineComponent>("animationTimelineComponent") },
-timeSincePressed{ 777.f }, animationCurve{ nullptr }
+AInteractableSwitcherBase::AInteractableSwitcherBase() :
+	switcherFrame{ CreateDefaultSubobject<UStaticMeshComponent>("switcherFrame") },
+	switcherBody{ CreateDefaultSubobject<UStaticMeshComponent>("switcherBody") },
+	animationTimeline{ CreateDefaultSubobject<UTimelineComponent>("animationTimeline") },
+	timeSincePressed{ 777.f }, animationCurve{ nullptr }
 {
 	SetActorTickEnabled(false);
 	PrimaryActorTick.bCanEverTick = true;
@@ -40,7 +41,7 @@ void AInteractableSwitcherBase::OnConstruction(const FTransform& Transform)
 	Super::OnConstruction(Transform);
 }
 
-bool AInteractableSwitcherBase::IsCurrentlyInteractable(AActor* caller) const
+bool AInteractableSwitcherBase::IsCurrentlyInteractable(const AActor* caller) const
 {
 	if (animationCurve) {
 		return !animationTimeline->IsPlaying();

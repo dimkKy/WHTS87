@@ -5,38 +5,24 @@
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
 #include "Templates/SharedPointer.h"
-//#include "Templates/Models.h"
-#include <type_traits>
+#include "WHTS87Utils.h"
 #include "PickupItemInfoBase.generated.h"
 
 class APickupItemContainer;
 
-
-//TModels 
-
-struct FItemPropertiesBase;
-
-template <class TProperties>
-concept DerivedItemProperties =
-	std::is_base_of<FItemPropertiesBase, TProperties>::value &&
-	std::negation<std::is_same<FItemPropertiesBase, TProperties>>::value;
-
 struct FItemPropertiesBase/* : public TSharedFromThis<FItemPropertiesBase, ESPMode::NotThreadSafe>*/
 {
-	template <DerivedItemProperties TProperties, class...Args>
+	template <WHTS87Utils::ChildOf<FItemPropertiesBase> TProperties, class...Args>
 	static TUniquePtr<FItemPropertiesBase> MakeUniquePtr(const Args&...args) {
-		/*static_assert(
-			std::is_base_of<FItemPropertiesBase, TProperties>::value &&
-			std::negation<std::is_same<FItemPropertiesBase, TProperties>>::value, 
-			"wrong Properties class");*/
-		TProperties* newProperties{ new TProperties(args...) };
-		return TUniquePtr<FItemPropertiesBase>(static_cast<FItemPropertiesBase*>(newProperties));
-	}
 
+		return TUniquePtr<FItemPropertiesBase>(
+			static_cast<FItemPropertiesBase*>(new TProperties(args...)));
+	}
 
 protected:
 	FItemPropertiesBase() {};
 };
+
 /**
  * 
  */
@@ -72,11 +58,15 @@ public:
 	const UStaticMesh* GetBodyMesh() const
 		{ return bodyMesh; }
 	//references?
-	FName GetName() const { return name; }
+	FName GetName() const 
+		{ return name; }
 
-	FText GetUseActionText() const { return useActionText; }
-	virtual FText GetDisplayName() const { return displayName; }
-	virtual FText GetDescription() const { return description; }
+	FText GetUseActionText() const 
+		{ return useActionText; }
+	virtual FText GetDisplayName() const 
+		{ return displayName; }
+	virtual FText GetDescription() const 
+		{ return description; }
 
 	virtual bool ConstructContainer(APickupItemContainer& container) const;
 
