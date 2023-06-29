@@ -6,9 +6,14 @@
 #include <type_traits>
 
 class UCameraComponent;
+//class UButton;
+//class UObject;
+
+#include "UObject/Object.h"
+#include "Components/Button.h"
 
  namespace WHTS87Utils {
-
+	 //if constexpr?
 	 template <class S, class O>
 	 inline bool IsIn(const S& subject, const O* other);
 
@@ -35,6 +40,26 @@ class UCameraComponent;
 	 float GetCameraNearPlane(const UCameraComponent& camera);
 
 	 FName GetNumberedName(const FString& source, int32 number = 0);
+
+	 template <typename... Args>
+	 concept NonEmpty = sizeof...(Args) > 0;
+
+	 /*template <ChildOf<UObject> TObject>
+	 void SetupButtons(TObject* object, UButton* button, void (TObject::* func)(void)) {
+		 button->SetClickMethod(EButtonClickMethod::PreciseClick);
+		 button->OnClicked.AddDynamic(object, func);
+		 //static_assert(object != nullptr && button != nullptr, "nulls aree not allowed");
+	 }*/
+
+	 template <ChildOf<AActor> TActor>
+	 auto* GetFirstActor(UWorld* world);
+
+	 template <ChildOf<AActor> TActor>
+	 void ForActorsOfClass(UWorld* world, std::invocable<AActor*> auto&& func);
+
+	 template <ChildOf<AActor> TActor, ChildOf<AActor>...TOthers>
+	 void ForActorsOfClass(UWorld* world, std::invocable<AActor*> auto&& func) requires NonEmpty<TOthers...>;
+
  }
 
  namespace WHTS87Utils::NamingRules {

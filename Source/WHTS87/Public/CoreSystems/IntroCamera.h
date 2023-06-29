@@ -3,19 +3,18 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "CineCameraActor.h"
 #include "IntroCamera.generated.h"
 
-class UCameraComponent;
 class AMonitor;
 
 UCLASS()
-class WHTS87_API AIntroCamera : public AActor
+class WHTS87_API AIntroCamera : public ACineCameraActor
 {
 	GENERATED_BODY()
 	
 public:	
-	AIntroCamera();
+	AIntroCamera(const FObjectInitializer& ObjectInitializer);
 	virtual void Tick(float DeltaTime) override;
 
 #if WITH_EDITOR
@@ -24,8 +23,8 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-		UCameraComponent* camera;
+	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		//UCameraComponent* camera;
 
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, DuplicateTransient)
 		float transitionDuration;
@@ -34,4 +33,5 @@ protected:
 		TSoftObjectPtr <AMonitor> targetMonitor;
 
 	FVector targetPos;
+	FVector targetRot;
 };

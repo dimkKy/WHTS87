@@ -9,7 +9,8 @@
 #include "Components/InventoryComponent.h"
 #include "Components/CanvasPanel.h"
 #include "Components/TextBlock.h"
-#include "Components/Image.h"
+#include "Components/Border.h"
+#include "Environment/Pickups/PickupItemInfoBase.h"
 #include "Engine/Texture2D.h"
 #include "Framework/MultiBox/MultiBoxBuilder.h"
 
@@ -19,6 +20,7 @@
 void UInventorySlot::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
+	//outline
 }
 
 void UInventorySlot::SetItemContainer(APickupItemContainer& container, float tileSize)
@@ -29,8 +31,8 @@ void UInventorySlot::SetItemContainer(APickupItemContainer& container, float til
 
 void UInventorySlot::RemoveContainerFromInventory(bool bEject, bool bBroadcast)
 {
-	if (APickupItemContainer* container{ representedContainer.Get() }) {
-		if (UInventoryComponent * inventory{ container->GetOwnerInventory() }) {
+	if (auto* container{ representedContainer.Get() }) {
+		if (auto* inventory{ container->GetOwnerInventory() }) {
 			if (inventory->RemoveContainer(*container, true, false)) {
 				RemoveFromParent();
 			}
@@ -45,14 +47,15 @@ void UInventorySlot::RemoveContainerFromInventory(bool bEject, bool bBroadcast)
 
 void UInventorySlot::UpdateSlot()
 {
-	if (APickupItemContainer * container{ representedContainer.Get() }) {
-		//itemCount->SetText(FText::FromString(FString::FromInt(container->GetItemsCount())));
-		/*if (UTexture2D * possibleThumbnai{ container->GetItemInfo()->GetThumbnail() }) {
+	if (auto* container{ representedContainer.Get() }) {
+		itemCount->SetText(FText::FromString(FString::FromInt(container->GetItemsCount())));
+		if (auto* possibleThumbnai{ container->GetItemInfo()->GetThumbnail() }) {
 			thumbnail->SetBrushFromTexture(possibleThumbnai);
+			
 		}
 		else {
-
-		}*/
+			check(false);
+		}
 			
 	}
 	else {
@@ -63,7 +66,8 @@ void UInventorySlot::UpdateSlot()
 
 UTexture2D* UInventorySlot::GetThumbnail()
 {
-	return thumbnail ? Cast<UTexture2D>(thumbnail->Brush.GetResourceObject()) : nullptr;
+	//return thumbnail ? Cast<UTexture2D>(thumbnail->Brush.GetResourceObject()) : nullptr;
+	return thumbnail ? CastChecked<UTexture2D>(thumbnail->Background.GetResourceObject()) : nullptr;
 }
 
 void UInventorySlot::RemoveFromParent()

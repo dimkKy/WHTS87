@@ -10,6 +10,7 @@
 #if WITH_EDITOR
 #include "Blueprint/WidgetTree.h"
 #endif
+#include "WHTS87Utils.h"
 
 const FNumberFormattingOptions UAdvancedSlider::formattingOptions{ 
 	FNumberFormattingOptions().SetMaximumFractionalDigits(0) };
@@ -23,6 +24,8 @@ void UAdvancedSlider::NativeOnInitialized()
 	slider->SetMaxValue(maxValue);
 	slider->SetValue(slider->MaxValue);
 	
+	//WHTS87Utils::SetupButtons(this, increaseButton, &UAdvancedSlider::OnIncreaseButtonPressed);
+
 	increaseButton->SetClickMethod(EButtonClickMethod::PreciseClick);
 	increaseButton->OnClicked.AddDynamic(this, &UAdvancedSlider::OnIncreaseButtonPressed);
 
@@ -44,8 +47,11 @@ EDataValidationResult UAdvancedSlider::IsDataValid(TArray<FText>& ValidationErro
 {
 	Super::IsDataValid(ValidationErrors);
 
-	if (WidgetTree->RootWidget != sizeBox)
-		ValidationErrors.Add(FText::FromString("sizeBox is supposed to be root"));
+	/*if (WidgetTree) {
+		if (WidgetTree->RootWidget != sizeBox) {
+			ValidationErrors.Add(FText::FromString("sizeBox is supposed to be root"));
+		}
+	}*/
 
 	return ValidationErrors.Num() > 0 ?
 		EDataValidationResult::Invalid : EDataValidationResult::Valid;

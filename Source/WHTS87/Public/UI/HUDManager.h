@@ -56,7 +56,7 @@ protected:
 		UGametimeUI* gametimeUI;
 
 	UPROPERTY(EditDefaultsOnly)
-		TSubclassOf<UGametimeUI> mainMenuUIClass;
+		TSubclassOf<UMainMenuUI> mainMenuUIClass;
 	UPROPERTY()
 		UMainMenuUI* mainMenuUI;
 

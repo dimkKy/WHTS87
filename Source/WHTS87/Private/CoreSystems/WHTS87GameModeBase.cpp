@@ -4,6 +4,8 @@
 #include "CoreSystems/WHTS87GameModeBase.h"
 #include "CoreSystems/StairwellManager.h"
 #include "Player/WHTS87PlayerController.h"
+#include "Player/PlayerCharacter.h"
+#include "UI/HUDManager.h"
 #include "EngineUtils.h"
 #include "CoreSystems/IntroCamera.h"
 #include "Kismet/GameplayStatics.h"
@@ -81,6 +83,29 @@ EDataValidationResult AWHTS87GameModeBase::IsDataValid(TArray<FText>& Validation
 		ValidationErrors.Add(FText::FromString("Invalid mainMenuLevel"));
 	}
 
+	if (HUDClass && HUDClass->IsChildOf<AHUDManager>()) {
+		if (!HUDClass->IsInBlueprint()) {
+			ValidationErrors.Add(FText::FromString("Use blueprinted AHUDManager"));
+		}
+	}
+	else {
+		ValidationErrors.Add(FText::FromString("Invalid HUDClass"));
+	}
+
+	if (PlayerControllerClass && PlayerControllerClass->IsChildOf<AWHTS87PlayerController>()) {
+
+	}
+	else {
+		ValidationErrors.Add(FText::FromString("Invalid PlayerControllerClass"));
+	}
+
+	if (DefaultPawnClass && DefaultPawnClass->IsChildOf<APlayerCharacter>()) {
+
+	}
+	else {
+		ValidationErrors.Add(FText::FromString("Invalid DefaultPawnClass"));
+	}
+
 	return ValidationErrors.Num() > 0 ?
 		EDataValidationResult::Invalid : EDataValidationResult::Valid;
 }
@@ -89,5 +114,5 @@ EDataValidationResult AWHTS87GameModeBase::IsDataValid(TArray<FText>& Validation
 void AWHTS87GameModeBase::StartPlay()
 {
 	Super::StartPlay();
-	GetWorld()->GetSubsystem<UStairwellManager>()->Init();
+	//GetWorld()->GetSubsystem<UStairwellManager>()->Init();
 }

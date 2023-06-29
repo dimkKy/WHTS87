@@ -7,6 +7,7 @@
 AMonitor::AMonitor() :
 	display{ CreateDefaultSubobject<UWidgetComponent>("display") }
 {
+	SetRootComponent(display);
 	//display->SetDrawAtDesiredSize(true);?
 }
 
@@ -28,6 +29,7 @@ FVector AMonitor::GetCloseViewingPos(float cameraFOV, float aspectRatio, float n
 {
 	return FVector();
 }
+
 
 #if WITH_EDITOR
 EDataValidationResult AMonitor::IsDataValid(TArray<FText>& ValidationErrors)

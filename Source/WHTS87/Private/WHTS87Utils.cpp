@@ -20,5 +20,5 @@ float WHTS87Utils::GetCameraNearPlane(const UCameraComponent& camera)
 
 FName WHTS87Utils::GetNumberedName(const FString& source, int32 number)
 {
-    return FName{ source + FString::FromInt(number) };;
+    return FName{ source + FString::FromInt(number) };
 }

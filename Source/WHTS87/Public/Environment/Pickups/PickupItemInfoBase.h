@@ -36,37 +36,25 @@ public:
 	virtual TUniquePtr<FItemPropertiesBase> MakeNonStaticProperties() const
 		PURE_VIRTUAL(UPickupItemInfoBase::MakeNonStaticProperties(), return {nullptr};);
 
-	FIntPoint GetInventorySize() const
-		{ return { xSize, ySize }; }
-	int32 GetXInventorySize() const 
-		{ return xSize; }
-	int32 GetYInventorySize() const 
-		{ return ySize; }
+	FIntPoint GetInventorySize() const;
+	int32 GetXInventorySize() const;
+	int32 GetYInventorySize() const;
 
-	int32 GetDefaultStackSize() const 
-		{ return defaultSpawnStackSize; }
-	int32 GetMaxStackSize() const 
-		{ return maxStackSize; }
+	int32 GetDefaultStackSize() const;
+	int32 GetMaxStackSize() const;
+	int32 GetMinUsableQuantity() const;
 
-	int32 GetMinUsableQuantity() const 
-		{ return minUsableQuantity; }
+	float GetItemWeight() const;
 
-	float GetItemWeight() const 
-		{ return itemWeightInKG; }
-	const UTexture2D* GetThumbnail() const 
-		{ return thumbnail; }
-	const UStaticMesh* GetBodyMesh() const
-		{ return bodyMesh; }
+	UTexture2D* GetThumbnail() const;
+	const UStaticMesh* GetBodyMesh() const;
+
 	//references?
-	FName GetName() const 
-		{ return name; }
+	FName GetName() const;
 
-	FText GetUseActionText() const 
-		{ return useActionText; }
-	virtual FText GetDisplayName() const 
-		{ return displayName; }
-	virtual FText GetDescription() const 
-		{ return description; }
+	FText GetUseActionText() const;
+	FText GetDisplayName() const;
+	FText GetDescription() const;
 
 	virtual bool ConstructContainer(APickupItemContainer& container) const;
 

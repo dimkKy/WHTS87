@@ -36,24 +36,20 @@ public:
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void Tick(float DeltaTime) override;
 
-	virtual bool IsCurrentlyInteractable(const AActor* caller) const override 
-		{ return bAcceptInteraction; };
+	virtual bool IsCurrentlyInteractable(const AActor* caller) const override;
 
-	UStaticMeshComponent* GetBody() const
-		{ return body; };
+	UStaticMeshComponent* GetBody() const;
 
-	const UPickupItemInfoBase* GetItemInfo() const
-		{ return itemInfo; };
+	const UPickupItemInfoBase* GetItemInfo() const;
 
-	UInventoryComponent* GetOwnerInventory() const
-		{ return ownerInventory.Get(); };
+	UInventoryComponent* GetOwnerInventory() const;
 
-	int32 GetItemsCount() const 
-		{ return itemCount; };
+	int32 GetItemsCount() const;
 
 	int32 GetLackingItemsCount() const;
 
-	bool InitializeWithItem(const UPickupItemInfoBase& newItemInfo, bool bOverrideDefaultSpawnParameters = false, int32 quantityToSpawn = 1);
+	bool InitializeWithItem(const UPickupItemInfoBase& newItemInfo, 
+		bool bOverrideDefaultSpawnParameters = false, int32 quantityToSpawn = 1);
 
 	//hide or event delete
 	void SetContainerState(EContainerState newState);

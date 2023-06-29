@@ -12,7 +12,7 @@
 void UMainMenuUI::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
-	
+
 	newGameButton->SetClickMethod(EButtonClickMethod::PreciseClick);
 	loadGameButton->SetClickMethod(EButtonClickMethod::PreciseClick);
 	settingsButton->SetClickMethod(EButtonClickMethod::PreciseClick);

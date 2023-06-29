@@ -80,3 +80,13 @@ void UVitalsComponent::ApplyPhysicalDamage(float amount, float duration)
 		healthModifiersQueue.AddTail({ amount, duration });
 }
 
+float UVitalsComponent::GetMaxHP() const
+{
+	return maxHPBase;
+}
+
+float UVitalsComponent::GetCurrentHP() const
+{
+	return currentHP;
+}
+

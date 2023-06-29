@@ -8,7 +8,7 @@
 
 class APickupItemContainer;
 class UTextBlock;
-class UImage;
+class UBorder;
 class UTexture2D;
 class USizeBox;
 class UInventoryPanel;
@@ -39,14 +39,17 @@ public:
 		//TSubclassOf<UItemInfoPanel> infopanelClass;
 	//void ToggleInfopanelVisibility(bool bVisible);
 protected:
-	TWeakObjectPtr<APickupItemContainer> representedContainer;
+	
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-		UImage* thumbnail;
+		UBorder* outline;
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+		UBorder* thumbnail;
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 		UTextBlock* itemCount;
 	//UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 		//USizeBox* mainSizeBox;
 	
+	TWeakObjectPtr<APickupItemContainer> representedContainer;
 	
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	virtual FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;

@@ -20,10 +20,13 @@ public:
 	virtual float GetLongInteractionTime() const { return 0.f; };
 
 	// getters for UI
-	UE_NODISCARD bool GetInstantActionDescription(FText& outInstantActionText) PURE_VIRTUAL(AInteractableActor::GetInstantActionDescription, return false;);
-	UE_NODISCARD bool GetLongActionDescription(FText& outLongActionText) PURE_VIRTUAL(AInteractableActor::GetLongActionDescription, return false;);
+	UE_NODISCARD bool GetInstantActionDescription(FText& outInstantActionText) 
+		PURE_VIRTUAL(AInteractableActor::GetInstantActionDescription, return false;);
+	UE_NODISCARD bool GetLongActionDescription(FText& outLongActionText) 
+		PURE_VIRTUAL(AInteractableActor::GetLongActionDescription, return false;);
 protected:
-	UE_NODISCARD virtual bool OnInstantInteraction(AActor* caller) PURE_VIRTUAL(AIInteractable::OnInstantInteraction, return false;);
+	UE_NODISCARD virtual bool OnInstantInteraction(AActor* caller) 
+		PURE_VIRTUAL(AIInteractable::OnInstantInteraction, return false;);
 	UE_NODISCARD virtual bool OnLongInteraction(AActor * caller) { return false; };
 
 /*	UPROPERTY(EditDefaultsOnly)

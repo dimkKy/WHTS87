@@ -25,7 +25,7 @@ enum class EStairwellType : uint8
 /**
  * 
  */
-UCLASS()
+UCLASS(Blueprintable)
 class WHTS87_API UStairwellManager : public UWorldSubsystem
 {
 	GENERATED_BODY()
@@ -89,8 +89,4 @@ protected:
 			10000,
 	};
 	constexpr static bool checkSWTypeChances(SIZE_T i = 0);
-	
-
-	//constexpr static std::pair<int32, int32> test = { 1, 1 };
-	//constexpr static FIntPoint test1 = { 1, 1 };
 };

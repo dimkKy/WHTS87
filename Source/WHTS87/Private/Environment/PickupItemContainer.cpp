@@ -35,6 +35,31 @@ void APickupItemContainer::Tick(float DeltaTime)
 		itemInfo->OnContainerTick(*this, DeltaTime);
 }
 
+bool APickupItemContainer::IsCurrentlyInteractable(const AActor* caller) const
+{
+	return bAcceptInteraction;
+}
+
+UStaticMeshComponent* APickupItemContainer::GetBody() const
+{
+	return body;
+}
+
+const UPickupItemInfoBase* APickupItemContainer::GetItemInfo() const
+{
+	return itemInfo;
+}
+
+UInventoryComponent* APickupItemContainer::GetOwnerInventory() const
+{
+	return ownerInventory.Get();
+}
+
+int32 APickupItemContainer::GetItemsCount() const
+{
+	return itemCount;
+}
+
 int32 APickupItemContainer::GetLackingItemsCount() const
 {
 	int32 lackingQuantity{ itemInfo->GetMaxStackSize() - itemCount };

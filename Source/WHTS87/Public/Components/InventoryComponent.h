@@ -40,10 +40,8 @@ public:
 	//UPROPERTY(BlueprintAssignable)
 	UE_NODISCARD bool GetContainerCoordinates(APickupItemContainer& container, FIntPoint& outpos) const;
 
-	int32 GetXSize() const noexcept 
-		{ return xSize; };
-	int32 GetYSize() const noexcept 
-		{ return ySize; };
+	int32 GetXSize() const noexcept;
+	int32 GetYSize() const noexcept;
 
 	FOnInventoryUpdated onInventoryUpdated;
 

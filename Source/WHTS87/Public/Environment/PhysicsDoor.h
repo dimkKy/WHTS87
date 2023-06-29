@@ -35,9 +35,12 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+
 	UE_NODISCARD virtual bool OnInstantInteraction(AActor* caller) override;
 	UE_NODISCARD virtual bool OnLongInteraction(AActor* caller) override;
+
 	void InstantClose();
+
 	UFUNCTION()
 		void OnDoorPutToSleep(UPrimitiveComponent* InComp, FName InBoneName);
 	UFUNCTION()
@@ -47,6 +50,7 @@ protected:
 	void OpenDoor();
 	void PushDoor();
 	//void Open(bool bInstant = false);
+	// 
 	//uproperty?
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 		UStaticMeshComponent* doorFrame;

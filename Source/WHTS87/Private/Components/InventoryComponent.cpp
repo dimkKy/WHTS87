@@ -343,3 +343,14 @@ bool UInventoryComponent::GetContainerCoordinates(APickupItemContainer& containe
 		return false;
 }
 
+int32 UInventoryComponent::GetXSize() const noexcept
+{
+	return xSize;
+}
+
+int32 UInventoryComponent::GetYSize() const noexcept
+{
+	return ySize;
+}
+
+

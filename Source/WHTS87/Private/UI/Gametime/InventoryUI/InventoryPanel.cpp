@@ -63,8 +63,10 @@ EDataValidationResult UInventoryPanel::IsDataValid(TArray<FText>& ValidationErro
 {
 	Super::IsDataValid(ValidationErrors) ;
 
-	if (slotCanvas->Slot->Parent != scrollBox)
+	if (slotCanvas->Slot->Parent != scrollBox) {
 		ValidationErrors.Add(FText::FromString("slotCanvas is supposed to be inside scrollBox"));
+	}
+		
 
 	return ValidationErrors.Num() > 0 ?
 		EDataValidationResult::Invalid : EDataValidationResult::Valid;

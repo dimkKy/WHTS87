@@ -5,15 +5,20 @@
 #include "Environment/PickupItemContainer.h"
 
 UPickupItemInfoBase::UPickupItemInfoBase() :
-	name{ "None" }, xSize{ 1 }, ySize{ 1 }, maxStackSize{ 1 }, defaultSpawnStackSize{ 1 },
-	minUsableQuantity{ 1 }, itemWeightInKG{ 1.f }, thumbnail{ nullptr }, bodyMesh{ nullptr }
+	name{ "None" }, xSize{ 1 }, ySize{ 1 }, maxStackSize{ 1 },
+	defaultSpawnStackSize{ 1 }, minUsableQuantity{ 1 }, 
+	itemWeightInKG{ 1.f }, thumbnail{ nullptr }, bodyMesh{ nullptr }
 {
+
 }
+
 
 bool UPickupItemInfoBase::ConstructContainer(APickupItemContainer& container) const
 {
-	if (container.IsPendingKill() || container.GetItemInfo() != nullptr)
+	if (container.IsPendingKill() || container.GetItemInfo() != nullptr) {
 		return false;
+	}
+		
 	UStaticMeshComponent* containerBody{ container.GetBody() };
 	containerBody->SetStaticMesh(bodyMesh);
 	containerBody->SetMassOverrideInKg(NAME_None, itemWeightInKG);
@@ -64,3 +69,68 @@ EDataValidationResult UPickupItemInfoBase::IsDataValid(TArray<FText>& Validation
 	}
 }
 #endif
+
+FIntPoint UPickupItemInfoBase::GetInventorySize() const
+{
+	return { xSize, ySize };
+}
+
+int32 UPickupItemInfoBase::GetXInventorySize() const
+{
+	return xSize;
+}
+
+int32 UPickupItemInfoBase::GetYInventorySize() const
+{
+	return ySize;
+}
+
+int32 UPickupItemInfoBase::GetDefaultStackSize() const
+{
+	return defaultSpawnStackSize;
+}
+
+int32 UPickupItemInfoBase::GetMaxStackSize() const
+{
+	return maxStackSize;
+}
+//delete?
+int32 UPickupItemInfoBase::GetMinUsableQuantity() const
+{
+	return minUsableQuantity;
+}
+
+float UPickupItemInfoBase::GetItemWeight() const
+{
+	return itemWeightInKG;
+}
+
+UTexture2D* UPickupItemInfoBase::GetThumbnail() const
+{
+	return thumbnail;
+}
+
+const UStaticMesh* UPickupItemInfoBase::GetBodyMesh() const
+{
+	return bodyMesh;
+}
+
+FName UPickupItemInfoBase::GetName() const
+{ 
+	return name; 
+}
+
+FText UPickupItemInfoBase::GetUseActionText() const
+{
+	return useActionText;
+}
+
+FText UPickupItemInfoBase::GetDisplayName() const
+{
+	return displayName;
+}
+
+FText UPickupItemInfoBase::GetDescription() const
+{
+	return description;
+}
