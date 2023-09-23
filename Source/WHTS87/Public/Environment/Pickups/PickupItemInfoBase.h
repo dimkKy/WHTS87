@@ -6,22 +6,10 @@
 #include "Engine/DataAsset.h"
 #include "Templates/SharedPointer.h"
 #include "WHTS87Utils.h"
+#include "Environment/Pickups/ItemPropertiesBase.h"
 #include "PickupItemInfoBase.generated.h"
 
 class APickupItemContainer;
-
-struct FItemPropertiesBase/* : public TSharedFromThis<FItemPropertiesBase, ESPMode::NotThreadSafe>*/
-{
-	template <WHTS87Utils::ChildOf<FItemPropertiesBase> TProperties, class...Args>
-	static TUniquePtr<FItemPropertiesBase> MakeUniquePtr(const Args&...args) {
-
-		return TUniquePtr<FItemPropertiesBase>(
-			static_cast<FItemPropertiesBase*>(new TProperties(args...)));
-	}
-
-protected:
-	FItemPropertiesBase() {};
-};
 
 /**
  * 
@@ -34,7 +22,7 @@ public:
 	UPickupItemInfoBase();
 
 	virtual TUniquePtr<FItemPropertiesBase> MakeNonStaticProperties() const
-		PURE_VIRTUAL(UPickupItemInfoBase::MakeNonStaticProperties(), return {nullptr};);
+		PURE_VIRTUAL(UPickupItemInfoBase::MakeNonStaticProperties(), return { nullptr };);
 
 	FIntPoint GetInventorySize() const;
 	int32 GetXInventorySize() const;
@@ -61,7 +49,7 @@ public:
 	virtual FPrimaryAssetId GetPrimaryAssetId() const override;
 
 #if WITH_EDITOR
-	virtual EDataValidationResult IsDataValid(TArray<FText>& ValidationErrors) override;
+	virtual EDataValidationResult IsDataValid(FDataValidationContext& context) const override;
 #endif
 	//container is not needed?
 	//virtual int32 OnUse(APickupItemContainer* container, AActor* caller, AActor* target, int32 timesToUse) PURE_VIRTUAL(UPickupItemGenericInfo::OnUse, return timesToUse;);

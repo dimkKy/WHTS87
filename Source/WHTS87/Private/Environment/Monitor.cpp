@@ -3,6 +3,9 @@
 
 #include "Environment/Monitor.h"
 #include "Components/WidgetComponent.h"
+#if WITH_EDITOR
+#include "Misc/DataValidation.h"
+#endif
 
 AMonitor::AMonitor() :
 	display{ CreateDefaultSubobject<UWidgetComponent>("display") }
@@ -32,15 +35,15 @@ FVector AMonitor::GetCloseViewingPos(float cameraFOV, float aspectRatio, float n
 
 
 #if WITH_EDITOR
-EDataValidationResult AMonitor::IsDataValid(TArray<FText>& ValidationErrors)
+EDataValidationResult AMonitor::IsDataValid(FDataValidationContext& context) const
 {
-	Super::IsDataValid(ValidationErrors);
+	Super::IsDataValid(context);
 
 	if (!widgetClass) {
-		ValidationErrors.Add(FText::FromString("Invalid widgetClass"));
+		context.AddError(FText::FromString("Invalid widgetClass"));
 	}
 
-	return ValidationErrors.Num() > 0 ?
+	return context.GetNumErrors() > 0 ?
 		EDataValidationResult::Invalid : EDataValidationResult::Valid;
 }
 #endif // WITH_EDITOR

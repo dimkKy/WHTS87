@@ -19,18 +19,20 @@ class WHTS87_API UAdvancedSlider : public UUserWidget
 	GENERATED_BODY()
 public:
 	virtual void NativeOnInitialized() override;
+
+	void SetSliderValue(float inValue);
+
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 		USlider* slider;
 
 #if WITH_EDITOR
-	virtual EDataValidationResult IsDataValid(TArray<FText>& ValidationErrors) override;
+	virtual EDataValidationResult IsDataValid(FDataValidationContext& context) const override;
 #endif
 
 	constexpr static float minValue = 0.f;
 	constexpr static float stepSize = 1.f;
 	constexpr static float maxValue = 100.f;
 	constexpr static float minXYratio = 10.f;
-	
 protected:
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))

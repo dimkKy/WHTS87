@@ -43,14 +43,14 @@ void UInventoryDiscardPanel::NativeOnDragEnter(const FGeometry& InGeometry, cons
 		itemThumbnail->SetBrushFromTexture(thumbnail);
 		FVector2D availableSize{ GetCachedGeometry().GetLocalSize() };
 		FVector2D desiredBrushSize{ slot->GetCachedGeometry().GetLocalSize() };
-		float desiredRatio{ desiredBrushSize.X / desiredBrushSize.Y };
+		double desiredRatio{ desiredBrushSize.X / desiredBrushSize.Y };
 		if (desiredRatio > availableSize.X / availableSize.Y) {
 			//other widget is more stretched than this
-			itemThumbnail->SetBrushSize({ availableSize.X, availableSize.X / desiredRatio });
+			itemThumbnail->SetDesiredSizeOverride({ availableSize.X, availableSize.X / desiredRatio });
 		}
 		else {
 			//other widget is less stretched than this
-			itemThumbnail->SetBrushSize({ availableSize.Y * desiredRatio, availableSize.Y });
+			itemThumbnail->SetDesiredSizeOverride({ availableSize.Y * desiredRatio, availableSize.Y });
 		}
 		itemThumbnail->SetOpacity(1.f);
 	}

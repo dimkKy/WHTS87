@@ -3,24 +3,28 @@
 
 #include "Components/VitalsComponent.h"
 #include "Containers/List.h"
+#if WITH_EDITOR
+#include "Misc/DataValidation.h"
+#endif
 
-UVitalsComponent::UVitalsComponent() : maxHPBase{ 100.f }, HPRegenPerSecond{0.5f}, currentHP { maxHPBase }
+UVitalsComponent::UVitalsComponent() : 
+	maxHPBase{ 100.f }, HPRegenPerSecond{ 0.5f }, currentHP { maxHPBase }
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	SetComponentTickInterval(0.5f);
 }
 #if WITH_EDITOR
-EDataValidationResult UVitalsComponent::IsDataValid(TArray<FText>& ValidationErrors)
+EDataValidationResult UVitalsComponent::IsDataValid(FDataValidationContext& context) const
 {
-	Super::IsDataValid(ValidationErrors);
+	Super::IsDataValid(context);
 	/*if (superResult != EDataValidationResult::Invalid) {
 		if ())
-			ValidationErrors.Add(FText::FromString());
-		if (ValidationErrors.Num() > 0) {
+			context.AddError(FText::FromString());
+		if (context.GetNumErrors() > 0) {
 			superResult = EDataValidationResult::Invalid;
 		}
 	}*/
-	return ValidationErrors.Num() > 0 ?
+	return context.GetNumErrors() > 0 ?
 		EDataValidationResult::Invalid : EDataValidationResult::Valid;
 }
 #endif

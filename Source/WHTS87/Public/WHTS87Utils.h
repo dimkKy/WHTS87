@@ -52,7 +52,7 @@ class UCameraComponent;
 	 }*/
 
 	 template <ChildOf<AActor> TActor>
-	 auto* GetFirstActor(UWorld* world);
+	 TActor* GetFirstActor(UWorld* world);
 
 	 template <ChildOf<AActor> TActor>
 	 void ForActorsOfClass(UWorld* world, std::invocable<AActor*> auto&& func);

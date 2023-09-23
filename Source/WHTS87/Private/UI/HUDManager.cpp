@@ -7,6 +7,9 @@
 #include "UI/Menus/MainMenuUI.h"
 #include "Player/PlayerCharacter.h"
 #include <CoreSystems/WHTS87UserSettings.h>
+#if WITH_EDITOR
+#include "Misc/DataValidation.h"
+#endif
 
 AHUDManager::AHUDManager() : 
 	gametimeUI{nullptr}, mainMenuUI{nullptr}, startupMenuUI{nullptr}
@@ -116,18 +119,18 @@ void AHUDManager::ShowStartupMenu()
 }
 
 #if WITH_EDITOR
-EDataValidationResult AHUDManager::IsDataValid(TArray<FText>& ValidationErrors)
+EDataValidationResult AHUDManager::IsDataValid(FDataValidationContext& context) const
 {
 	
-	Super::IsDataValid(ValidationErrors);
+	Super::IsDataValid(context);
 	if (!IsValid(gametimeUIClass))
-		ValidationErrors.Add(FText::FromString("Invalid gametimeUIClass"));
+		context.AddError(FText::FromString("Invalid gametimeUIClass"));
 	if (!IsValid(mainMenuUIClass))
-		ValidationErrors.Add(FText::FromString("Invalid mainMenuUIClass"));
+		context.AddError(FText::FromString("Invalid mainMenuUIClass"));
 	if (!IsValid(startupMenuUIClass))
-		ValidationErrors.Add(FText::FromString("Invalid startupMenuUIClass"));
+		context.AddError(FText::FromString("Invalid startupMenuUIClass"));
 
-	return ValidationErrors.Num() > 0 ?
+	return context.GetNumErrors() > 0 ?
 		EDataValidationResult::Invalid : EDataValidationResult::Valid;
 }
 #endif

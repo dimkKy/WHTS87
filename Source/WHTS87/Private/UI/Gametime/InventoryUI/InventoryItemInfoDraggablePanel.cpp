@@ -8,6 +8,9 @@
 #include "Components/Button.h"
 #include "Components/ScaleBox.h"
 #include "Fonts/FontMeasure.h"
+#if WITH_EDITOR
+#include "Misc/DataValidation.h"
+#endif
 
 void UInventoryItemInfoDraggablePanel::NativeOnInitialized()
 {
@@ -79,17 +82,13 @@ void UInventoryItemInfoDraggablePanel::OnCloseButtonClicked()
 }
 
 #if WITH_EDITOR
-EDataValidationResult UInventoryItemInfoDraggablePanel::IsDataValid(TArray<FText>& ValidationErrors)
+EDataValidationResult UInventoryItemInfoDraggablePanel::IsDataValid(FDataValidationContext& context) const
 {
-	EDataValidationResult superResult{ Super::IsDataValid(ValidationErrors) };
-	if (superResult != EDataValidationResult::Invalid) {
-		if (closeButton->Slot->Parent != closeButtonScaleBox)
-			ValidationErrors.Add(FText::FromString("closeButton is supposed to be placed inside closeButtonScaleBox"));
+	Super::IsDataValid(context);
+	if (closeButton->Slot->Parent != closeButtonScaleBox)
+		context.AddError(FText::FromString("closeButton is supposed to be placed inside closeButtonScaleBox"));
 
-		if (ValidationErrors.Num() > 0) {
-			superResult = EDataValidationResult::Invalid;
-		}
-	}
-	return superResult;
+	return context.GetNumErrors() > 0 ?
+		EDataValidationResult::Invalid : EDataValidationResult::Valid;
 }
 #endif

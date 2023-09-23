@@ -11,12 +11,15 @@
 #include "Components/CanvasPanelSlot.h"
 #include "Environment/PickupItemContainer.h"
 #include "Environment/Pickups/PickupItemInfoBase.h"
+#if WITH_EDITOR
+#include "Misc/DataValidation.h"
+#endif
 
 
 void UInventoryPanel::NativeOnInitialized()
 {
     Super::NativeOnInitialized();
-    scrollBox->ConsumeMouseWheel = EConsumeMouseWheel::WhenScrollingPossible;
+	scrollBox->SetConsumeMouseWheel(EConsumeMouseWheel::WhenScrollingPossible);
     scrollBox->SetOrientation(EOrientation::Orient_Vertical);
 }
 
@@ -59,16 +62,16 @@ void UInventoryPanel::SetNewInventory(UInventoryComponent* newInventory)
 }
 
 #if WITH_EDITOR
-EDataValidationResult UInventoryPanel::IsDataValid(TArray<FText>& ValidationErrors)
+EDataValidationResult UInventoryPanel::IsDataValid(FDataValidationContext& context) const
 {
-	Super::IsDataValid(ValidationErrors) ;
+	Super::IsDataValid(context);
 
 	if (slotCanvas->Slot->Parent != scrollBox) {
-		ValidationErrors.Add(FText::FromString("slotCanvas is supposed to be inside scrollBox"));
+		context.AddError(FText::FromString("slotCanvas is supposed to be inside scrollBox"));
 	}
 		
 
-	return ValidationErrors.Num() > 0 ?
+	return context.GetNumErrors() > 0 ?
 		EDataValidationResult::Invalid : EDataValidationResult::Valid;
 }
 #endif
@@ -89,9 +92,9 @@ bool UInventoryPanel::NativeOnDrop(const FGeometry& InGeometry, const FDragDropE
 			InDragDropEvent.GetScreenSpacePosition()) - operation->localPivotPos };
 
 		FIntPoint newPos{ 
-			FMath::Clamp(FGenericPlatformMath::RoundToInt(
+			FMath::Clamp(FGenericPlatformMath::RoundToInt32(
 				slotLocalMinPos.X / tileSize), 0, representedInventory->GetXSize()),
-			FMath::Clamp(FGenericPlatformMath::RoundToInt(
+			FMath::Clamp(FGenericPlatformMath::RoundToInt32(
 				(slotLocalMinPos.Y + scrollBox->GetScrollOffset()) / tileSize), 0, representedInventory->GetYSize())
 		};
 

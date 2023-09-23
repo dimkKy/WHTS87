@@ -25,7 +25,7 @@ public:
 	FVector GetCloseViewingPos(float cameraFOV, float aspectRatio, float nearClipPlane);
 
 #if WITH_EDITOR
-	virtual EDataValidationResult IsDataValid(TArray<FText>& ValidationErrors) override;
+	virtual EDataValidationResult IsDataValid(FDataValidationContext& context) const override;
 #endif
 
 protected:

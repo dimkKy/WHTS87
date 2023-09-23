@@ -9,6 +9,9 @@
 #include "EngineUtils.h"
 #include "CoreSystems/IntroCamera.h"
 #include "Kismet/GameplayStatics.h"
+#if WITH_EDITOR
+#include "Misc/DataValidation.h"
+#endif
 
 AWHTS87GameModeBase::AWHTS87GameModeBase() :
 	localController{ nullptr }, mainMenuLevel{ nullptr }
@@ -65,9 +68,9 @@ void AWHTS87GameModeBase::OnGameplayStart()
 }
 
 #if WITH_EDITOR
-EDataValidationResult AWHTS87GameModeBase::IsDataValid(TArray<FText>& ValidationErrors)
+EDataValidationResult AWHTS87GameModeBase::IsDataValid(FDataValidationContext& context) const
 {
-	Super::IsDataValid(ValidationErrors);
+	Super::IsDataValid(context);
 
 	if (mainMenuLevel) {
 		int32 introCamerasCount{ 0 };
@@ -76,37 +79,37 @@ EDataValidationResult AWHTS87GameModeBase::IsDataValid(TArray<FText>& Validation
 			introCamerasCount++;
 		}
 		if (introCamerasCount != 1) {
-			ValidationErrors.Add(FText::FromString("There should be exactly one intro camera in main level"));
+			context.AddError(FText::FromString("There should be exactly one intro camera in main level"));
 		}
 	}
 	else {
-		ValidationErrors.Add(FText::FromString("Invalid mainMenuLevel"));
+		context.AddError(FText::FromString("Invalid mainMenuLevel"));
 	}
 
 	if (HUDClass && HUDClass->IsChildOf<AHUDManager>()) {
 		if (!HUDClass->IsInBlueprint()) {
-			ValidationErrors.Add(FText::FromString("Use blueprinted AHUDManager"));
+			context.AddError(FText::FromString("Use blueprinted AHUDManager"));
 		}
 	}
 	else {
-		ValidationErrors.Add(FText::FromString("Invalid HUDClass"));
+		context.AddError(FText::FromString("Invalid HUDClass"));
 	}
 
 	if (PlayerControllerClass && PlayerControllerClass->IsChildOf<AWHTS87PlayerController>()) {
 
 	}
 	else {
-		ValidationErrors.Add(FText::FromString("Invalid PlayerControllerClass"));
+		context.AddError(FText::FromString("Invalid PlayerControllerClass"));
 	}
 
 	if (DefaultPawnClass && DefaultPawnClass->IsChildOf<APlayerCharacter>()) {
 
 	}
 	else {
-		ValidationErrors.Add(FText::FromString("Invalid DefaultPawnClass"));
+		context.AddError(FText::FromString("Invalid DefaultPawnClass"));
 	}
 
-	return ValidationErrors.Num() > 0 ?
+	return context.GetNumErrors() > 0 ?
 		EDataValidationResult::Invalid : EDataValidationResult::Valid;
 }
 #endif

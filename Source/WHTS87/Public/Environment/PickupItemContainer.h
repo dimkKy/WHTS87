@@ -4,11 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "Environment/InteractableActor.h"
+#include "Environment/Pickups/ItemPropertiesBase.h"
 #include "PickupItemContainer.generated.h"
 
 class UInventoryComponent;
 class UPickupItemInfoBase;
-struct FItemPropertiesBase;
 
 enum class EContainerState : uint8
 {
@@ -33,6 +33,7 @@ class WHTS87_API APickupItemContainer : public AInteractableActor
 	GENERATED_BODY()
 public:
 	APickupItemContainer();
+	APickupItemContainer(FVTableHelper& Helper);
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void Tick(float DeltaTime) override;
 
@@ -65,7 +66,6 @@ public:
 	//TODO
 	UE_NODISCARD bool RemoveFromInventory(bool bEject);
 
-
 	TUniquePtr<FItemPropertiesBase> properties;
 	//TSharedPtr<FItemPropertiesBase> properties;
 protected:
@@ -93,6 +93,6 @@ protected:
 	static constexpr float throwForceMultiplier = 400.f;
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
-	virtual EDataValidationResult IsDataValid(TArray<FText>& ValidationErrors) override;
+	virtual EDataValidationResult IsDataValid(FDataValidationContext& context) const override;
 #endif
 };

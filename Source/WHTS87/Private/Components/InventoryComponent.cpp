@@ -4,6 +4,9 @@
 #include "Components/InventoryComponent.h"
 #include "Environment/PickupItemContainer.h"
 #include "Environment/Pickups/PickupItemInfoBase.h"
+#if WITH_EDITOR
+#include "Misc/DataValidation.h"
+#endif
 
 UInventoryComponent::UInventoryComponent() : 
 	xSize{ 6 }, ySize{ 5 }
@@ -94,7 +97,7 @@ void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 int32 UInventoryComponent::TryAddContainer(APickupItemContainer& container, bool bShouldTopUp, bool bBroadcast)
 {
 	//?
-	if (container.IsPendingKill() || container.GetItemsCount() < 1 || container.GetOwnerInventory() == this) {
+	if (!IsValidChecked(&container) || container.GetItemsCount() < 1 || container.GetOwnerInventory() == this) {
 		//todo
 		check(false);
 		return 0;
@@ -137,7 +140,7 @@ int32 UInventoryComponent::TryAddContainer(APickupItemContainer& container, bool
 
 int32 UInventoryComponent::TryAddContainer(APickupItemContainer& container, const FIntPoint& pos, bool bShouldTopUp, bool bBroadcast)
 {
-	if (container.IsPendingKill() || container.GetItemsCount() < 1) {
+	if (!IsValidChecked(&container) || container.GetItemsCount() < 1) {
 		//todo
 		check(false);
 		return 0;
@@ -171,8 +174,10 @@ int32 UInventoryComponent::TryAddContainer(APickupItemContainer& container, cons
 
 int32 UInventoryComponent::CheckInsertContainer(APickupItemContainer& container, const FIntPoint& pos) const
 {
-	if (container.IsPendingKill())
+	if (!IsValidChecked(&container)) {
 		return 0;
+	}
+		
 	int32 targetCell{ pos.X + (pos.Y) * xSize };
 	if (cells[targetCell]) {
 		//possible top up

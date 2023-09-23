@@ -5,6 +5,9 @@
 #include "Environment/Pickups/PickupItemInfoBase.h"
 #include "Components/TextBlock.h"
 #include "Components/SizeBox.h"
+#if WITH_EDITOR
+#include "Misc/DataValidation.h"
+#endif
 
 void UInventoryItemInfoPanel::NativeOnInitialized()
 {
@@ -19,18 +22,19 @@ void UInventoryItemInfoPanel::SetWidthOverride(float deziredWidth)
 }
 
 #if WITH_EDITOR
-EDataValidationResult UInventoryItemInfoPanel::IsDataValid(TArray<FText>& ValidationErrors)
+EDataValidationResult UInventoryItemInfoPanel::IsDataValid(FDataValidationContext& context) const
 {
-	EDataValidationResult superResult{ Super::IsDataValid(ValidationErrors) };
+	Super::IsDataValid(context);
 	/*if (superResult != EDataValidationResult::Invalid) {
 		if (sizeBox is root?)
-			ValidationErrors.Add(FText::FromString("sizeBox is supposed to be root"));
+			context.AddError(FText::FromString("sizeBox is supposed to be root"));
 
-		if (ValidationErrors.Num() > 0) {
+		if (context.GetNumErrors() > 0) {
 			superResult = EDataValidationResult::Invalid;
 		}
 	}*/
-	return superResult;
+	return context.GetNumErrors() > 0 ?
+		EDataValidationResult::Invalid : EDataValidationResult::Valid;
 }
 #endif
 

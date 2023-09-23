@@ -4,12 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "Environment/Pickups/PickupItemInfoBase.h"
+#include "Environment/Pickups/ItemPropertiesBase.h"
 #include "FlashlightInfo.generated.h"
 
 //class USpotLightComponent;
 
-struct FFlashlightProperties : public FItemPropertiesBase
+class FFlashlightProperties : public FItemPropertiesBase
 {
+public:
 	FFlashlightProperties() :
 		bIsTurnedOn{ false } {};
 	bool bIsTurnedOn;
@@ -36,8 +38,9 @@ public:
 	virtual TUniquePtr<FItemPropertiesBase> MakeNonStaticProperties() const override;
 
 	virtual int32 OnUse(AActor& caller, AActor* target, int32 timesToUse) const override;
+
 #if WITH_EDITOR
-	virtual EDataValidationResult IsDataValid(TArray<FText>& ValidationErrors) override;
+	virtual EDataValidationResult IsDataValid(FDataValidationContext& context) const override;
 #endif
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ClampMin = "0.01"))

@@ -9,7 +9,7 @@ void UStartupMenu::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 	backButton->SetClickMethod(EButtonClickMethod::PreciseClick);
-	backButton->OnClicked.AddDynamic(this, &UStartupMenu::RemoveFromViewport);
+	backButton->OnClicked.AddDynamic(this, &UStartupMenu::RemoveFromParent);
 
 	saveExitButton->SetClickMethod(EButtonClickMethod::PreciseClick);
 	saveExitButton->OnClicked.AddDynamic(this, &UStartupMenu::OnSaveExitButtonPressed);

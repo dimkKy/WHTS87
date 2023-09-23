@@ -7,10 +7,11 @@
 #include "Components/SizeBox.h"
 #include "Components/Button.h"
 #include "Fonts/FontMeasure.h"
+#include "WHTS87Utils.h"
 #if WITH_EDITOR
 #include "Blueprint/WidgetTree.h"
+#include "Misc/DataValidation.h"
 #endif
-#include "WHTS87Utils.h"
 
 const FNumberFormattingOptions UAdvancedSlider::formattingOptions{ 
 	FNumberFormattingOptions().SetMaximumFractionalDigits(0) };
@@ -22,7 +23,6 @@ void UAdvancedSlider::NativeOnInitialized()
 	slider->SetMinValue(minValue);
 	slider->SetStepSize(stepSize);
 	slider->SetMaxValue(maxValue);
-	slider->SetValue(slider->MaxValue);
 	
 	//WHTS87Utils::SetupButtons(this, increaseButton, &UAdvancedSlider::OnIncreaseButtonPressed);
 
@@ -33,54 +33,56 @@ void UAdvancedSlider::NativeOnInitialized()
 	decreaseButton->OnClicked.AddDynamic(this, &UAdvancedSlider::OnDecreaseButtonPressed);
 
 	FVector2D sliderTextSize{ FSlateApplication::Get().GetRenderer()->
-		GetFontMeasureService().Get().Measure("999", valueText->Font) };
+		GetFontMeasureService().Get().Measure(FString::FromInt(FMath::RoundToInt32(maxValue)), valueText->GetFont()) };
 
 	valueText->SetMinDesiredWidth(sliderTextSize.X);
 	sizeBox->SetMinDesiredWidth(sliderTextSize.Y * minXYratio);
 	
-	OnSliderValueChanged(100.f);
+	SetSliderValue(slider->GetMaxValue());
 	//ForceLayoutPrepass();
 }
 
-#if WITH_EDITOR
-EDataValidationResult UAdvancedSlider::IsDataValid(TArray<FText>& ValidationErrors)
+void UAdvancedSlider::SetSliderValue(float inValue)
 {
-	Super::IsDataValid(ValidationErrors);
+	slider->SetValue(inValue);
+	OnSliderValueChanged(inValue);
+}
+
+#if WITH_EDITOR
+EDataValidationResult UAdvancedSlider::IsDataValid(FDataValidationContext& context) const
+{
+	Super::IsDataValid(context);
 
 	/*if (WidgetTree) {
 		if (WidgetTree->RootWidget != sizeBox) {
-			ValidationErrors.Add(FText::FromString("sizeBox is supposed to be root"));
+			context.AddError(FText::FromString("sizeBox is supposed to be root"));
 		}
 	}*/
 
-	return ValidationErrors.Num() > 0 ?
+	return context.GetNumErrors() > 0 ?
 		EDataValidationResult::Invalid : EDataValidationResult::Valid;
 }
 #endif
 
 void UAdvancedSlider::OnIncreaseButtonPressed()
 {
-	float newValue{ slider->GetValue() + slider->StepSize };
-	if (newValue > slider->MaxValue) {
-		slider->SetValue(slider->MaxValue);
-		OnSliderValueChanged(slider->MaxValue);
+	float newValue{ slider->GetValue() + slider->GetStepSize() };
+	if (newValue > slider->GetMaxValue()) {
+		SetSliderValue(slider->GetMaxValue());
 	}
 	else {
-		slider->SetValue(newValue);
-		OnSliderValueChanged(newValue);
+		SetSliderValue(newValue);
 	}
 }
 
 void UAdvancedSlider::OnDecreaseButtonPressed()
 {
-	float newValue{ slider->GetValue() - slider->StepSize };
-	if (newValue < slider->MinValue) {
-		slider->SetValue(slider->MinValue);
-		OnSliderValueChanged(slider->MinValue);
+	float newValue{ slider->GetValue() - slider->GetStepSize() };
+	if (newValue < slider->GetMinValue()) {
+		SetSliderValue(slider->GetMinValue());
 	}
 	else {
-		slider->SetValue(newValue);
-		OnSliderValueChanged(newValue);
+		SetSliderValue(newValue);
 	}
 }
 

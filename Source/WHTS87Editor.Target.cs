@@ -8,7 +8,12 @@ public class WHTS87EditorTarget : TargetRules
 	public WHTS87EditorTarget( TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Editor;
-		DefaultBuildSettings = BuildSettingsVersion.V2;
-		ExtraModuleNames.AddRange( new string[] { "WHTS87" } );
+
+        DefaultBuildSettings = BuildSettingsVersion.V4;
+        IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
+
+        bUseAdaptiveUnityBuild = false;
+
+        ExtraModuleNames.AddRange( new string[] { "WHTS87" } );
 	}
 }

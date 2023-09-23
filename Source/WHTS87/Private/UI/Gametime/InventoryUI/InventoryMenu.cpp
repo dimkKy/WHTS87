@@ -8,6 +8,9 @@
 #include "UI/Gametime/InventoryUI/InventoryItemInfoDraggablePanel.h"
 #include "Environment/Pickups/PickupItemInfoBase.h"
 //#include "Blueprint/UserWidget.h"
+#if WITH_EDITOR
+#include "Misc/DataValidation.h"
+#endif
 
 void UInventoryMenu::AddItemInfoPanel(UPickupItemInfoBase* itemInfo, FVector2D desiredAbsPos)
 {
@@ -86,25 +89,25 @@ bool UInventoryMenu::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEv
 }
 
 #if WITH_EDITOR
-EDataValidationResult UInventoryMenu::IsDataValid(TArray<FText>& ValidationErrors)
+EDataValidationResult UInventoryMenu::IsDataValid(FDataValidationContext& context) const
 {
 	//?
-	Super::IsDataValid(ValidationErrors);
+	Super::IsDataValid(context);
 	if (IsValid(hoveredItemInfoPanelClass)) {
 		if (hoveredItemInfoPanelClass.Get()->IsChildOf(UInventoryItemInfoDraggablePanel::StaticClass())) {
-			ValidationErrors.Add(FText::FromString(
+			context.AddError(FText::FromString(
 				"Invalid hoveredItemInfoPanelClass: should not be derived from UInventoryItemInfoDraggablePanel"));
 		}
 	}
 	else {
-		ValidationErrors.Add(FText::FromString("Invalid hoveredItemInfoPanelClass"));
+		context.AddError(FText::FromString("Invalid hoveredItemInfoPanelClass"));
 	}
 	if (!IsValid(draggableItemInfoPanelClass))
-		ValidationErrors.Add(FText::FromString("Invalid draggableItemInfoPanelClass"));
+		context.AddError(FText::FromString("Invalid draggableItemInfoPanelClass"));
 	if (!IsValid(itemInfoSlotClass))
-		ValidationErrors.Add(FText::FromString("Invalid itemInfoSlotClass"));
+		context.AddError(FText::FromString("Invalid itemInfoSlotClass"));
 
-	return ValidationErrors.Num() > 0 ?
+	return context.GetNumErrors() > 0 ?
 		EDataValidationResult::Invalid : EDataValidationResult::Valid;
 }
 #endif

@@ -2,17 +2,20 @@
 
 
 #include "Environment/Pickups/MedkitInfo.h"
+#if WITH_EDITOR
+#include "Misc/DataValidation.h"
+#endif
 
-EDataValidationResult UMedkitInfo::IsDataValid(TArray<FText>& ValidationErrors)
+EDataValidationResult UMedkitInfo::IsDataValid(FDataValidationContext& context) const
 {
-	Super::IsDataValid(ValidationErrors);
+	Super::IsDataValid(context);
 
 	if (healAmount < 1.f)
-		ValidationErrors.Add(FText::FromString("healAmount can not be less than 1%"));
+		context.AddError(FText::FromString("healAmount can not be less than 1%"));
 	if (healDuration < 0.f)
-		ValidationErrors.Add(FText::FromString("healDuration can not be less than 0"));
+		context.AddError(FText::FromString("healDuration can not be less than 0"));
 
-	if (ValidationErrors.Num() > 0) {
+	if (context.GetNumErrors() > 0) {
 		return EDataValidationResult::Invalid;
 	}
 	else {

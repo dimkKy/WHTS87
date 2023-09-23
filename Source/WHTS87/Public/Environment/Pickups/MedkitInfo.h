@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Environment/Pickups/PickupItemInfoBase.h"
+#include "Environment/Pickups/ItemPropertiesBase.h"
 #include "MedkitInfo.generated.h"
 
 struct FMedkitProperties : public FItemPropertiesBase
@@ -37,7 +38,7 @@ public:
 
 	//virtual int32 OnUse(AActor& caller, AActor* target, int32 timesToUse) const override;
 #if WITH_EDITOR
-	virtual EDataValidationResult IsDataValid(TArray<FText>& ValidationErrors) override;
+	virtual EDataValidationResult IsDataValid(FDataValidationContext& context) const override;
 #endif
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (ClampMin = "1"))

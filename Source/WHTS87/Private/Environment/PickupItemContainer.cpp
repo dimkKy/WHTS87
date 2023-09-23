@@ -4,6 +4,9 @@
 #include "Environment/PickupItemContainer.h"
 #include "Environment/Pickups/PickupItemInfoBase.h"
 #include "Components/InventoryComponent.h"
+#if WITH_EDITOR
+#include "Misc/DataValidation.h"
+#endif
 
 APickupItemContainer::APickupItemContainer() : 
 	body{ CreateDefaultSubobject<UStaticMeshComponent>("body") }, 
@@ -17,6 +20,10 @@ APickupItemContainer::APickupItemContainer() :
 	body->SetGenerateOverlapEvents(false);
 	body->SetSimulatePhysics(true);
 	SetRootComponent(body);
+}
+
+APickupItemContainer::APickupItemContainer(FVTableHelper& Helper)
+{
 }
 
 void APickupItemContainer::OnConstruction(const FTransform& Transform)
@@ -72,7 +79,8 @@ bool APickupItemContainer::InitializeWithItem(const UPickupItemInfoBase& newItem
 	//https://docs.unrealengine.com/4.27/en-US/ProgrammingAndScripting/ProgrammingWithCPP/Assertions/
 	//validation?
 	//cannot reuse
-	if (newItemInfo.IsPendingKill()) {
+	
+	if (!IsValidChecked(&newItemInfo)) {
 		return false;
 	}
 
@@ -292,13 +300,13 @@ void APickupItemContainer::PostEditChangeProperty(FPropertyChangedEvent& Propert
 		InitializeWithItem(*itemInfo);
 }
 
-EDataValidationResult APickupItemContainer::IsDataValid(TArray<FText>& ValidationErrors)
+EDataValidationResult APickupItemContainer::IsDataValid(FDataValidationContext& context) const
 {
-	Super::IsDataValid(ValidationErrors) ;
+	Super::IsDataValid(context);
 	if (!IsValid(itemInfo))
-		ValidationErrors.Add(FText::FromString("Invalid itemInfo"));
+		context.AddError(FText::FromString("Invalid itemInfo"));
 
-	return ValidationErrors.Num() > 0 ?
+	return context.GetNumErrors() > 0 ?
 		EDataValidationResult::Invalid : EDataValidationResult::Valid;
 }
 #endif

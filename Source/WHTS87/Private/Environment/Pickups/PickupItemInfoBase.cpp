@@ -3,6 +3,9 @@
 
 #include "Environment/Pickups/PickupItemInfoBase.h"
 #include "Environment/PickupItemContainer.h"
+#if WITH_EDITOR
+#include "Misc/DataValidation.h"
+#endif
 
 UPickupItemInfoBase::UPickupItemInfoBase() :
 	name{ "None" }, xSize{ 1 }, ySize{ 1 }, maxStackSize{ 1 },
@@ -15,7 +18,7 @@ UPickupItemInfoBase::UPickupItemInfoBase() :
 
 bool UPickupItemInfoBase::ConstructContainer(APickupItemContainer& container) const
 {
-	if (container.IsPendingKill() || container.GetItemInfo() != nullptr) {
+	if (!IsValidChecked(&container) || container.GetItemInfo() != nullptr) {
 		return false;
 	}
 		
@@ -36,32 +39,32 @@ FPrimaryAssetId UPickupItemInfoBase::GetPrimaryAssetId() const
 }
 
 #if WITH_EDITOR
-EDataValidationResult UPickupItemInfoBase::IsDataValid(TArray<FText>& ValidationErrors)
+EDataValidationResult UPickupItemInfoBase::IsDataValid(FDataValidationContext& context) const
 {
-	Super::IsDataValid(ValidationErrors);
+	Super::IsDataValid(context);
 
 	if (name.IsNone())
-		ValidationErrors.Add(FText::FromString("Name was NAME_NONE"));
+		context.AddError(FText::FromString("Name was NAME_NONE"));
 	if (useActionText.IsEmpty())
-		ValidationErrors.Add(FText::FromString("UseActionText was empty"));
+		context.AddError(FText::FromString("UseActionText was empty"));
 	if (description.IsEmpty())
-		ValidationErrors.Add(FText::FromString("Description was empty"));
+		context.AddError(FText::FromString("Description was empty"));
 	if (displayName.IsEmpty())
-		ValidationErrors.Add(FText::FromString("DisplayName was empty"));
+		context.AddError(FText::FromString("DisplayName was empty"));
 	if (xSize < 1 || ySize < 1)
-		ValidationErrors.Add(FText::FromString("Iventory sizes can not be less than 1"));
+		context.AddError(FText::FromString("Iventory sizes can not be less than 1"));
 	if (maxStackSize < 1 || defaultSpawnStackSize < 1 || maxStackSize < defaultSpawnStackSize)
-		ValidationErrors.Add(FText::FromString("Invalid stack sizes: can not be less than 1, max size can not be less than default one"));
+		context.AddError(FText::FromString("Invalid stack sizes: can not be less than 1, max size can not be less than default one"));
 	if (itemWeightInKG < 0.1f)
-		ValidationErrors.Add(FText::FromString("Weight can not be less than 100g"));
+		context.AddError(FText::FromString("Weight can not be less than 100g"));
 	if (!thumbnail->IsValidLowLevel())
-		ValidationErrors.Add(FText::FromString("Thumbnail is not valid"));
+		context.AddError(FText::FromString("Thumbnail is not valid"));
 	if (minUsableQuantity > maxStackSize)
-		ValidationErrors.Add(FText::FromString("Min usable quantity is greater than max stack size"));
+		context.AddError(FText::FromString("Min usable quantity is greater than max stack size"));
 	if (!bodyMesh->HasValidRenderData())
-		ValidationErrors.Add(FText::FromString("Body mesh is not valid"));
+		context.AddError(FText::FromString("Body mesh is not valid"));
 
-	if (ValidationErrors.Num() > 0) {
+	if (context.GetNumErrors() > 0) {
 		return EDataValidationResult::Invalid;
 	}
 	else {

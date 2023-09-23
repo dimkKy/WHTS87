@@ -25,14 +25,14 @@ UE_NODISCARD bool AInteractableActor::OnInteract(AActor* caller, bool bIsInstant
 }
 
 /*#if WITH_EDITOR
-EDataValidationResult AInteractableActor::IsDataValid(TArray<FText>& ValidationErrors)
+EDataValidationResult AInteractableActor::IsDataValid(FDataValidationContext& context) const
 {
 	EDataValidationResult superResult{ Super::IsDataValid(ValidationErrors) };
 	if (superResult == EDataValidationResult::Valid) {
 		if (longInteractionTime != 0.f && longInteractionTime < 0.49f)
-			ValidationErrors.Add(FText::FromString("Interaction time can not be less than 0.5 seconds. Put zero if you want to disable long interaction"));
+			context.AddError(FText::FromString("Interaction time can not be less than 0.5 seconds. Put zero if you want to disable long interaction"));
 
-		if (ValidationErrors.Num() > 0) {
+		if (context.GetNumErrors() > 0) {
 			superResult = EDataValidationResult::Invalid;
 		}
 	}

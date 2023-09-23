@@ -8,7 +8,12 @@ public class WHTS87Target : TargetRules
 	public WHTS87Target( TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Game;
-		DefaultBuildSettings = BuildSettingsVersion.V2;
-		ExtraModuleNames.AddRange( new string[] { "WHTS87" } );
+
+        DefaultBuildSettings = BuildSettingsVersion.V4;
+        IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
+
+        bUseAdaptiveUnityBuild = false;
+
+        ExtraModuleNames.AddRange( new string[] { "WHTS87" } );
 	}
 }

@@ -4,6 +4,9 @@
 #include "CoreSystems/WHTS87GameInstance.h"
 #include "CoreSystems/StairwellManager.h"
 #include "MoviePlayer.h"
+#if WITH_EDITOR
+#include "Misc/DataValidation.h"
+#endif
 
 void UWHTS87GameInstance::Init()
 {
@@ -32,15 +35,15 @@ void UWHTS87GameInstance::OnWorldChanged(UWorld* OldWorld, UWorld* NewWorld)
 }
 
 #if WITH_EDITOR
-EDataValidationResult UWHTS87GameInstance::IsDataValid(TArray<FText>& ValidationErrors)
+EDataValidationResult UWHTS87GameInstance::IsDataValid(FDataValidationContext& context) const
 {
-	Super::IsDataValid(ValidationErrors);
+	Super::IsDataValid(context);
 	//
 	if (!IsValid(StaiwellManagerClass)) {
-		ValidationErrors.Add(FText::FromString("Invalid StaiwellManagerClass"));
+		context.AddError(FText::FromString("Invalid StaiwellManagerClass"));
 	}
 	//
-	if (ValidationErrors.Num() > 0) {
+	if (context.GetNumErrors() > 0) {
 		return EDataValidationResult::Invalid;
 	}
 	else {

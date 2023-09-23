@@ -4,6 +4,9 @@
 #include "Environment/Pickups/FlashlightInfo.h"
 //#include "Environment/Pickups/PickupItemInfoBase.h"
 #include "Environment/PickupItemContainer.h"
+#if WITH_EDITOR
+#include "Misc/DataValidation.h"
+#endif
 
 bool UFlashlightInfo::ConstructContainer(APickupItemContainer& container) const
 {
@@ -31,15 +34,15 @@ int32 UFlashlightInfo::OnUse(AActor& caller, AActor* target, int32 timesToUse) c
 }
 
 #if WITH_EDITOR
-EDataValidationResult UFlashlightInfo::IsDataValid(TArray<FText>& ValidationErrors)
+EDataValidationResult UFlashlightInfo::IsDataValid(FDataValidationContext& context) const
 {
-	Super::IsDataValid(ValidationErrors);
+	Super::IsDataValid(context);
 
 	/*if (bodyMesh->FindSocket(spotLightSocket) == NULL) {
-		ValidationErrors.Add(FText::FromString("Socket for light has bad name"));
+		context.AddError(FText::FromString("Socket for light has bad name"));
 	}*/
 		
-	if (ValidationErrors.Num() > 0) {
+	if (context.GetNumErrors() > 0) {
 		return EDataValidationResult::Invalid;
 	}
 	else {

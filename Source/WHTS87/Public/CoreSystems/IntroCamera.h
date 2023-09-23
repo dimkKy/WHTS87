@@ -18,7 +18,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 #if WITH_EDITOR
-	virtual EDataValidationResult IsDataValid(TArray<FText>& ValidationErrors) override;
+	virtual EDataValidationResult IsDataValid(FDataValidationContext& context) const override;
 #endif
 protected:
 	virtual void BeginPlay() override;

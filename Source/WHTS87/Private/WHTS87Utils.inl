@@ -20,7 +20,7 @@ bool WHTS87Utils::IsIn(const S& subject, const O* other, const Os * ...others)
 }
 
 template<WHTS87Utils::ChildOf<AActor> TActor>
-auto* WHTS87Utils::GetFirstActor(UWorld* world)
+TActor* WHTS87Utils::GetFirstActor(UWorld* world)
 {
 	check(world);
 	auto it{ TActorIterator<TActor>(world) };

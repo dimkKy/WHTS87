@@ -6,6 +6,9 @@
 #include "Environment/Monitor.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "WHTS87Utils.h"
+#if WITH_EDITOR
+#include "Misc/DataValidation.h"
+#endif
 
 AIntroCamera::AIntroCamera(const FObjectInitializer& ObjectInitializer) :
 	Super(ObjectInitializer),
@@ -30,15 +33,15 @@ void AIntroCamera::Tick(float DeltaTime)
 }
 
 #if WITH_EDITOR
-EDataValidationResult AIntroCamera::IsDataValid(TArray<FText>& ValidationErrors)
+EDataValidationResult AIntroCamera::IsDataValid(FDataValidationContext& context) const
 {
-	Super::IsDataValid(ValidationErrors);
+	Super::IsDataValid(context);
 
 	if (!targetMonitor) {
-		ValidationErrors.Add(FText::FromString("Invalid targetMonitor"));
+		context.AddError(FText::FromString("Invalid targetMonitor"));
 	}
 
-	return ValidationErrors.Num() > 0 ?
+	return context.GetNumErrors() > 0 ?
 		EDataValidationResult::Invalid : EDataValidationResult::Valid;
 }
 #endif // WITH_EDITOR
