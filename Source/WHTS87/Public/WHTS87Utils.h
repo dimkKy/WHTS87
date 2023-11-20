@@ -21,22 +21,31 @@ class UCameraComponent;
 	 inline bool IsIn(const S& subject, const O* other, const Os*... others);
 
 	 template <class TDerived, class TBase, bool allowSame = false>
-	 concept ChildOf = std::is_base_of<TBase, TDerived>::value &&
-		 (allowSame || std::negation<std::is_same<TBase, TDerived>>::value);
+	 concept ChildOf = std::is_base_of_v<TBase, TDerived> &&
+		 (allowSame || !std::is_same_v<TBase, TDerived>);
 
 	 template <typename TDerived, template<typename> typename TBase>
 	 struct is_derived_from_any
 	 {
 		 template<typename TParam>
-		 static constexpr std::true_type is_derived(const volatile TBase<TParam>&);
+		 static constexpr std::true_type is_derived(const TBase<TParam>&);
 		 static constexpr std::false_type is_derived(...);
 		 using type = decltype(is_derived(std::declval<TDerived&>()));
 	 };
 
 	 template <class TDerived, template<typename> typename TBase>
-	 concept ChildOfAny = is_derived_from_any<TDerived, TBase>::type::value;
+	 using is_derived_from_any_t = is_derived_from_any<TDerived, TBase>::type;
 
-	 constexpr float defaultNearClipPlane = 10.f;
+	 template <class TDerived, template<typename> typename TBase>
+	 inline constexpr bool is_derived_from_any_v{ is_derived_from_any_t<TDerived, TBase>::value };
+
+	 template <class TDerived, template<typename> typename TBase>
+	 concept ChildOfAny = is_derived_from_any_v<TDerived, TBase>;
+
+	 template<class T, class... Classes>
+	 concept AllSame = (std::is_same_v<T, Classes> && ...);
+
+	 constexpr float defaultNearClipPlane{ 10.f };
 	 float GetCameraNearPlane(const UCameraComponent& camera);
 
 	 FName GetNumberedName(const FString& source, int32 number = 0);
@@ -65,12 +74,12 @@ class UCameraComponent;
  namespace WHTS87Utils::NamingRules {
 	 
 
-	 const FName toNextSWSocket{ "NextFloorSocket" };
-	 const FString doorSocket{ "DoorSocket" };
-	 const FString doorFrameSocket{ "DoorFrameSocket" };
-	 const FString specialRoomSocket{ "SpecialSocket" };
-	 const FString subroomSocket{ "SubroomSocket" };
-	 const FString volumePoint{ "volumePoint" };
+	 const inline FName toNextSWSocket{ "NextFloorSocket" };
+	 const inline FString doorSocket{ "DoorSocket" };
+	 const inline FString doorFrameSocket{ "DoorFrameSocket" };
+	 const inline FString specialRoomSocket{ "SpecialSocket" };
+	 const inline FString subroomSocket{ "SubroomSocket" };
+	 const inline FString volumePoint{ "volumePoint" };
 
  }
 
